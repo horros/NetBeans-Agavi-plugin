@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: php.agavi
+OpenIDE-Module-Layer: php/agavi/layer.xml
+OpenIDE-Module-Localizing-Bundle: php/agavi/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
