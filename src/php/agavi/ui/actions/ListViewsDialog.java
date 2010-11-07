@@ -68,6 +68,11 @@ public class ListViewsDialog extends javax.swing.JDialog {
         setTitle(org.openide.util.NbBundle.getMessage(ListViewsDialog.class, "ListViewsDialog.title")); // NOI18N
 
         jList1.setModel(viewListModel);
+        jList1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                MouseClickedHandler(evt);
+            }
+        });
         jScrollPane1.setViewportView(jList1);
 
         jButton1.setText(org.openide.util.NbBundle.getMessage(ListViewsDialog.class, "ListViewsDialog.jButton1.text")); // NOI18N
@@ -123,6 +128,15 @@ public class ListViewsDialog extends javax.swing.JDialog {
         this.setVisible(false);
         this.ok = true;
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void MouseClickedHandler(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MouseClickedHandler
+        if (evt.getClickCount() == 2) {
+            evt.consume();
+            this.setVisible(false);
+            this.ok = true;
+            
+        }
+    }//GEN-LAST:event_MouseClickedHandler
 
     /**
     * @param args the command line arguments
