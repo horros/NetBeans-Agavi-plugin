@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 import org.netbeans.modules.php.api.editor.EditorSupport;
 import org.netbeans.modules.php.api.editor.PhpBaseElement;
 import org.netbeans.modules.php.api.editor.PhpClass;
+import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Lookup;
 import php.agavi.AgaviPhpFrameworkProvider;
@@ -60,8 +61,8 @@ public final class AgaviUtils {
 
     public static final String DIR_VIEWS = "views";
     public static final String DIR_ACTIONS = "actions";
-    public static final Pattern VIEW_NAME = Pattern.compile("^(\\w+)(.*)View");
-    public static final Pattern VIEW_FILE = Pattern.compile("^(\\w+)(.*)View.class.php");
+    public static final Pattern VIEW_NAME = Pattern.compile("^(\\w+)(.*)(?:Success|Input|Error)View");
+    public static final Pattern VIEW_FILE = Pattern.compile("^(\\w+)(.*)(?:Success|Input|Error)View.class.php");
     public static final Pattern TEMPLATE_FILE = Pattern.compile("^(\\w+)(?:Success|Input|Error).php$");
     
     public static String ACTION_METHOD_PREFIX = "execute";
@@ -89,6 +90,9 @@ public final class AgaviUtils {
         
         FileObject parent = viewFile.getParent();
         
+        PhpModule module = PhpModule.inferPhpModule();
+        System.out.println("Attempting to find " + action);
+        System.out.println("Source dir: " + module.getSourceDirectory().getName());
         System.out.println("In AgaviUtils.getAction(): " + parent.getName());
         // We don't really have a way to know if this is a sub-action or a
         // sub-sub-action or whatever, so we must attempt to traverse backwards
@@ -103,7 +107,8 @@ public final class AgaviUtils {
                 parent = parent.getParent();
             }
             
-        } while(!parent.isRoot());
+        } while(!module.getSourceDirectory().getName().equals(parent.getName()));
+        
         
         return null;
     }
