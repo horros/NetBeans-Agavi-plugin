@@ -44,6 +44,7 @@ package php.agavi;
 import php.agavi.commands.AgaviFrameworkCommandSupport;
 import php.agavi.editor.AgaviEditorExtender;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -51,6 +52,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.netbeans.modules.php.api.phpmodule.BadgeIcon;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpModuleProperties;
@@ -146,6 +148,38 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
         }
         return null;
     }
+
+    /**
+     * Try to locate (find) a <code>relativePath</code> in source directory.
+     * Currently, it searches source dir and its subdirs (if <code>subdirs</code> equals {@code true}).
+     * @return {@link FileObject} or {@code null} if not found
+     */
+    public static List<FileObject> locate(FileObject startDir, Pattern relativePath, boolean subdirs) {
+        
+        List<FileObject> list = Collections.synchronizedList(new ArrayList<FileObject>());
+
+        for (FileObject child : startDir.getChildren()) {
+           
+            if (relativePath.matcher(child.getNameExt()).matches()) {
+                list.add(child);
+            }
+            if (child.isFolder() && !child.getName().equals(".svn")) {
+                List<FileObject> sublist = locate(child, relativePath, subdirs);
+                if (sublist != null && sublist.size() > 0) {
+                    for (FileObject fileObject : sublist) {
+                        System.out.println(fileObject.getNameExt());
+                        list.add(fileObject);
+                    }
+                }
+            }
+        }
+        if (list.size() > 0) {
+            return list;
+        } else {
+            return null;
+        }
+    }
+    
     
     /**
      * Attempt to detect whether or not the PHP project is an Agavi project

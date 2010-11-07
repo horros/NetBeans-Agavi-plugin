@@ -102,6 +102,11 @@ class AgaviPhpModuleActionsExtender extends PhpModuleActionsExtender {
     public boolean isViewWithAction(FileObject fo) {
          return AgaviUtils.isView(fo) && AgaviUtils.getAction(fo) != null;
     }
+     
+    @Override
+     public boolean isActionWithView(FileObject fo) {
+         return AgaviUtils.isActionWithView(fo);
+     }
     
     /**
      * Get the Agavi-specific Go To Action implementation. Cannot return null

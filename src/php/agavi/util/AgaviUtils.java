@@ -43,6 +43,7 @@
 
 package php.agavi.util;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netbeans.modules.php.api.editor.EditorSupport;
@@ -52,6 +53,7 @@ import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Lookup;
 import php.agavi.AgaviPhpFrameworkProvider;
+import php.agavi.ui.actions.ListViewsDialog;
 
 /**
  *
@@ -61,9 +63,11 @@ public final class AgaviUtils {
 
     public static final String DIR_VIEWS = "views";
     public static final String DIR_ACTIONS = "actions";
-    public static final Pattern VIEW_NAME = Pattern.compile("^(\\w+)(.*)(?:Success|Input|Error)View");
-    public static final Pattern VIEW_FILE = Pattern.compile("^(\\w+)(.*)(?:Success|Input|Error)View.class.php");
+    public static final Pattern VIEW_NAME = Pattern.compile("^(\\w+)(?:Success|Input|Error)View");
+    public static final Pattern VIEW_FILE = Pattern.compile("^(\\w+)(?:Success|Input|Error)View.class.php");
     public static final Pattern TEMPLATE_FILE = Pattern.compile("^(\\w+)(?:Success|Input|Error).php$");
+    public static final Pattern ACTION_FILE = Pattern.compile("^(\\w+)Action.class.php$");
+    public static final Pattern ACTION_NAME = Pattern.compile("^(\\w+)Action$");
     
     public static String ACTION_METHOD_PREFIX = "execute";
     
@@ -135,11 +139,64 @@ public final class AgaviUtils {
     public static boolean isViewWithAction(FileObject fo) {
         return isView(fo) && getAction(fo) != null;
     }
+    
+    public static boolean isActionWithView(FileObject fo) {
+        return isAction(fo);
+    }
 
     public static FileObject getView(FileObject fo, PhpBaseElement phpElement) {
         
-        return null;
+        Matcher actionMatcher = ACTION_FILE.matcher(fo.getNameExt());
+        System.out.println("getView: " + fo.getNameExt());
+        if (actionMatcher.matches()) {
         
+            FileObject parent = fo.getParent();
+        
+            PhpModule module = PhpModule.inferPhpModule();
+            
+            Pattern p = Pattern.compile(actionMatcher.group(1) + "(Success|Error|Input)View.class.php");
+            
+            List<FileObject> list = null;
+            do {
+                System.out.println(parent.getName());
+                list = AgaviPhpFrameworkProvider.locate(parent, p, true);
+                if (list != null) {
+                    break;
+                } else {
+                    parent = parent.getParent();
+                }
+            
+            } while(!module.getSourceDirectory().getName().equals(parent.getName()));
+            
+            if (list != null && !list.isEmpty()) {
+                ListViewsDialog dialog = new ListViewsDialog(null, true, list);
+                dialog.setVisible(true);
+                return dialog.getSelectedFile();
+                
+            } else {
+                return null;
+            }
+        }
+        
+        return null;
+
+        
+    }
+
+    private static boolean isAction(FileObject fo) {
+        
+        System.out.println("isAction: " +fo.getNameExt());
+        
+        EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
+        for (PhpClass phpClass : editorSupport.getClasses(fo)) {
+            System.out.println(phpClass.getName());
+            if (ACTION_NAME.matcher(phpClass.getName()).matches() && 
+                ACTION_FILE.matcher(fo.getNameExt()).matches()) {
+                return true;
+                }
+        }
+        return false;    
+    
     }
 
     
