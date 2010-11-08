@@ -39,15 +39,11 @@
  *
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
-
 package php.agavi.ui.actions;
 
 import org.netbeans.modules.csl.api.UiUtils;
-import org.netbeans.modules.php.api.editor.EditorSupport;
-import org.netbeans.modules.php.api.editor.PhpBaseElement;
 import org.netbeans.modules.php.spi.actions.GoToViewAction;
 import org.openide.filesystems.FileObject;
-import org.openide.util.Lookup;
 import php.agavi.util.AgaviUtils;
 
 /**
@@ -55,8 +51,9 @@ import php.agavi.util.AgaviUtils;
  * @author Markus Lervik <markus.lervik@necora.fi>
  */
 public class AgaviGoToViewAction extends GoToViewAction {
-    private final FileObject fo;
-    private final int offset;
+
+    private FileObject fo = null;
+    private int offset = 0;
 
     public AgaviGoToViewAction(FileObject fo, int offset) {
         this.fo = fo;
@@ -65,17 +62,13 @@ public class AgaviGoToViewAction extends GoToViewAction {
 
     @Override
     public boolean goToView() {
-        EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
-        PhpBaseElement phpElement = editorSupport.getElement(fo, offset);
-        if (phpElement == null) {
-            return false;
-        }
-        FileObject view = AgaviUtils.getView(fo, phpElement);
+
+        FileObject view = AgaviUtils.getView(fo);
         if (view != null) {
             UiUtils.open(view, DEFAULT_OFFSET);
             return true;
         }
         return false;
-    }
 
+    }
 }

@@ -41,6 +41,7 @@
  */
 package php.agavi;
 
+import org.netbeans.modules.versioning.spi.VersioningSystem;
 import php.agavi.commands.AgaviFrameworkCommandSupport;
 import php.agavi.editor.AgaviEditorExtender;
 import java.io.File;
@@ -63,6 +64,7 @@ import org.netbeans.modules.php.spi.phpmodule.PhpFrameworkProvider;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleActionsExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleIgnoredFilesExtender;
+import org.netbeans.modules.versioning.VersioningManager;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.ImageUtilities;
@@ -131,16 +133,28 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      */
     public static FileObject locate(FileObject startDir, String relativePath, boolean subdirs) {
         
+         VersioningManager vManager = VersioningManager.getInstance();
 
         FileObject fileObject = startDir.getFileObject(relativePath);
         if (fileObject != null || !subdirs) {
             return fileObject;
         }
         for (FileObject child : startDir.getChildren()) {
+            
+            File childFile = FileUtil.toFile(child);
+            
+            if (childFile != null) {
+                VersioningSystem owner = vManager.getOwner(childFile);
+                if (!owner.getVisibilityQuery().isVisible(childFile)) {
+                    continue;
+                }
+            }            
+            
             fileObject = child.getFileObject(relativePath);
+            
             if (fileObject != null) {
                 return fileObject;
-            } else if (child.isFolder() && !child.getName().equals(".svn")) {
+            } else if (child.isFolder()) {
                 fileObject = locate(child, relativePath, subdirs);
                 if (fileObject != null)
                     return fileObject;
@@ -150,21 +164,34 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     }
 
     /**
-     * Try to locate (find) a <code>relativePath</code> in source directory.
+     * Try to locate (find) files matching <code>searchPattern</code> in source directory.
      * Currently, it searches source dir and its subdirs (if <code>subdirs</code> equals {@code true}).
      * @return {@link FileObject} or {@code null} if not found
      */
-    public static List<FileObject> locate(FileObject startDir, Pattern relativePath, boolean subdirs) {
+    public static List<FileObject> locate(FileObject startDir, Pattern searchPattern, boolean subdirs) {
+
+        VersioningManager vManager = VersioningManager.getInstance();
+        
         
         List<FileObject> list = Collections.synchronizedList(new ArrayList<FileObject>());
 
         for (FileObject child : startDir.getChildren()) {
            
-            if (relativePath.matcher(child.getNameExt()).matches()) {
+            File childFile = FileUtil.toFile(child);
+            
+            if (childFile != null) {
+                VersioningSystem owner = vManager.getOwner(childFile);
+                if (!owner.getVisibilityQuery().isVisible(childFile)) {
+                    continue;
+                }
+            }
+            
+            if (searchPattern.matcher(child.getNameExt()).matches()) {
                 list.add(child);
             }
-            if (child.isFolder() && !child.getName().equals(".svn")) {
-                List<FileObject> sublist = locate(child, relativePath, subdirs);
+            
+            if (child.isFolder()) {
+                List<FileObject> sublist = locate(child, searchPattern, subdirs);
                 if (sublist != null && sublist.size() > 0) {
                     for (FileObject fileObject : sublist) {
                         System.out.println(fileObject.getNameExt());
@@ -332,5 +359,6 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     public EditorExtender getEditorExtender(PhpModule phpModule) {
         return new AgaviEditorExtender();
     }
+   
 
 }
