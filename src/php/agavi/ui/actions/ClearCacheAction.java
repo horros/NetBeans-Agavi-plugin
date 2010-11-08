@@ -43,21 +43,33 @@
 
 package php.agavi.ui.actions;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.prefs.Preferences;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
+import org.netbeans.modules.php.api.util.FileUtils;
 import org.netbeans.modules.php.spi.actions.BaseAction;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileStateInvalidException;
+import org.openide.filesystems.FileUtil;
+import org.openide.util.Exceptions;
+import php.agavi.AgaviPhpFrameworkProvider;
 
 /**
  *
  * @author Markus Lervik <markus.lervik@necora.fi>
  */
-public class ClearCacheAction extends BaseAction {
+public final class ClearCacheAction extends BaseAction {
 
+    private static final ClearCacheAction INSTANCE = new ClearCacheAction();
+    
     private ClearCacheAction() {
         
     }
     
     public static ClearCacheAction getInstance() {
-        return new ClearCacheAction();
+        return INSTANCE;
     }
 
     @Override
@@ -73,5 +85,50 @@ public class ClearCacheAction extends BaseAction {
     @Override
     protected void actionPerformed(PhpModule phpModule) {
         
+     
+        Preferences preferences = getPreferences(phpModule);
+        
+        System.out.println("Nuking cache..");
+        
+        String sourceDir = preferences.get("sourcesDir", "");
+        System.out.println(sourceDir);
+        File location;
+        
+        if (!sourceDir.isEmpty()) {
+            location = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir);
+        } else {
+            location = new File(phpModule.getSourceDirectory().getPath());
+        }
+        System.out.println(location.getAbsolutePath());
+        FileObject startDir = FileUtil.toFileObject(location);
+        
+        FileObject cache = AgaviPhpFrameworkProvider.locate(startDir, "cache", true);
+        
+        if (cache != null) {
+            try {
+                try {
+                    System.out.println(cache.getURL().toURI().toString());
+                } catch (URISyntaxException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            } catch (FileStateInvalidException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            for(FileObject child : cache.getChildren()) {
+                try {
+                    child.delete();
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        } else {
+            System.out.println("Could not locate cache");
+        }
+        
+        
+    }
+    
+    private static Preferences getPreferences(PhpModule module) {
+        return module.getPreferences(AgaviPhpFrameworkProvider.class, true);
     }
 }

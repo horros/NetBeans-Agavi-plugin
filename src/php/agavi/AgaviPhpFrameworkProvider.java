@@ -62,6 +62,7 @@ import org.netbeans.modules.php.spi.commands.FrameworkCommandSupport;
 import org.netbeans.modules.php.spi.editor.EditorExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpFrameworkProvider;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleActionsExtender;
+import org.netbeans.modules.php.spi.phpmodule.PhpModuleCustomizerExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleIgnoredFilesExtender;
 import org.netbeans.modules.versioning.VersioningManager;
@@ -360,5 +361,10 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
         return new AgaviEditorExtender();
     }
    
-
+    @Override
+    public PhpModuleCustomizerExtender createPhpModuleCustomizerExtender(PhpModule phpModule) {
+        return new AgaviPhpModuleCustomiserExtender(phpModule);
+    }
+    
+    
 }
