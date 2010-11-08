@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netbeans.modules.php.api.editor.EditorSupport;
-import org.netbeans.modules.php.api.editor.PhpBaseElement;
 import org.netbeans.modules.php.api.editor.PhpClass;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.openide.filesystems.FileObject;
@@ -71,8 +70,14 @@ public final class AgaviUtils {
     
     public static String ACTION_METHOD_PREFIX = "execute";
     
+    
+    /**
+     * Return the action associated with this view. 
+     * 
+     * @param viewFile the current view file open in the editor
+     * @return the action file if found, null otherwise
+     */
     public static FileObject getAction(FileObject viewFile) {
-        
         
         Matcher viewMatcher = VIEW_FILE.matcher(viewFile.getNameExt());
         Matcher templateMatcher = TEMPLATE_FILE.matcher(viewFile.getNameExt());
@@ -95,33 +100,30 @@ public final class AgaviUtils {
         FileObject parent = viewFile.getParent();
         
         PhpModule module = PhpModule.inferPhpModule();
-        System.out.println("Attempting to find " + action);
-        System.out.println("Source dir: " + module.getSourceDirectory().getName());
-        System.out.println("In AgaviUtils.getAction(): " + parent.getName());
         // We don't really have a way to know if this is a sub-action or a
         // sub-sub-action or whatever, so we must attempt to traverse backwards
-        // up the directory hierarchy and try to find an "actions"-folder.
-        // If we do, try to find an action file within the folder or its subfolders
+        // up the directory hierarchy and try to find an action file within the 
+        // folder or its subfolders
         do {
-            System.out.println(parent.getName());
+        
             FileObject f = AgaviPhpFrameworkProvider.locate(parent, action, true);
             if (f != null) {
                 return f;
             } else {
                 parent = parent.getParent();
             }
-            
+        
         } while(!module.getSourceDirectory().getName().equals(parent.getName()));
         
-        
         return null;
+        
     }
     
     /**
      * Attempt to determine if this file is a view
      * 
-     * @param fo
-     * @return 
+     * @param fo the view file
+     * @return  true if the file appears to be a view, false otherwise
      */
     public static boolean isView(FileObject fo) {
         
@@ -136,64 +138,135 @@ public final class AgaviUtils {
         
     }   
     
+    /**
+     * Attempt to determine if we can find an action for this view
+     * 
+     * @param fo the view file
+     * @return  true if we can find an action, false otherwise
+     */
     public static boolean isViewWithAction(FileObject fo) {
         return isView(fo) && getAction(fo) != null;
     }
     
+    
+    /**
+     * Attempt to determine if we can find a view for this action
+     * 
+     * @param fo the action file
+     * @return true if we can find a view, false otherwise
+     */
     public static boolean isActionWithView(FileObject fo) {
-        return isAction(fo);
+        return isAction(fo) && hasView(fo) != false;
     }
 
-    public static FileObject getView(FileObject fo, PhpBaseElement phpElement) {
+    /**
+     * Return the view associated with this action. Because of how views
+     * are selected in Agavi, the only reasonable way to attempt to figure
+     * out which view to return, is to find all views with the same "base" name
+     * as the action, and provide a popup for the user to select the wanted view from.
+     * 
+     * @param actionFile the action file open in the editor
+     * @return the view file to open
+     */
+    public static FileObject getView(FileObject actionFile) {
         
-        Matcher actionMatcher = ACTION_FILE.matcher(fo.getNameExt());
-        System.out.println("getView: " + fo.getNameExt());
+        if (hasView(actionFile)) {
+            return showViewDialog(getViews(actionFile));
+        } else {
+            return null;
+        }
+
+        
+    }
+    
+    /**
+     * Attempt to determine if the action has view files
+     * 
+     * @param actionFile the action file open in the editor
+     * @return true if the action has views, false otherwise
+     */
+    public static boolean hasView(FileObject actionFile) {
+        List files = getViews(actionFile);
+        return (files != null && files.size() > 0);
+    }
+
+    /**
+     * Get a list of view files associated with this action
+     * 
+     * @param actionFile the action file open in the editor
+     * @return a list of views associated with this action or null if no views found
+     */
+    private static List<FileObject> getViews(FileObject actionFile) {
+        
+        Matcher actionMatcher = ACTION_FILE.matcher(actionFile.getNameExt());
+        
         if (actionMatcher.matches()) {
         
-            FileObject parent = fo.getParent();
+            FileObject parent = actionFile.getParent();
         
             PhpModule module = PhpModule.inferPhpModule();
             
             Pattern p = Pattern.compile(actionMatcher.group(1) + "(Success|Error|Input)View.class.php");
             
             List<FileObject> list = null;
+            
             do {
-                System.out.println(parent.getName());
+
                 list = AgaviPhpFrameworkProvider.locate(parent, p, true);
+                
+                // If the return value isn't null, that means we have already
+                // found one or more views, so we needn't traverse the filesystem
+                // upwards anymore
                 if (list != null) {
                     break;
                 } else {
                     parent = parent.getParent();
                 }
-            
+            // Stop at the project source root
             } while(!module.getSourceDirectory().getName().equals(parent.getName()));
             
-            if (list != null && !list.isEmpty()) {
-                ListViewsDialog dialog = new ListViewsDialog(null, true, list);
-                dialog.setVisible(true);
-                return dialog.getSelectedFile();
-                
-            } else {
-                return null;
-            }
+            return list;
         }
         
         return null;
-
-        
     }
 
-    private static boolean isAction(FileObject fo) {
-        
-        System.out.println("isAction: " +fo.getNameExt());
+    /**
+     * Show a dialog from which the user can choose which view file to open
+     * 
+     * @param viewList the list of views to display
+     * @return the view file chosen, or null if the user didn't choose a file
+     */
+    private static FileObject showViewDialog(List<FileObject> viewList) {
+        // If we found views, present a dialog to the user
+        if (viewList != null && !viewList.isEmpty()) {
+            ListViewsDialog dialog = new ListViewsDialog(null, true, viewList);
+            dialog.pack();
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+            return dialog.getSelectedFile();
+            
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Attempt to determine if the file is an action
+     * 
+     * @param actionFile the action file open in the editor
+     * @return true if it appears to be an action, false otherwise
+     */
+    private static boolean isAction(FileObject actionFile) {
         
         EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
-        for (PhpClass phpClass : editorSupport.getClasses(fo)) {
-            System.out.println(phpClass.getName());
+        for (PhpClass phpClass : editorSupport.getClasses(actionFile)) {
+            
             if (ACTION_NAME.matcher(phpClass.getName()).matches() && 
-                ACTION_FILE.matcher(fo.getNameExt()).matches()) {
+                ACTION_FILE.matcher(actionFile.getNameExt()).matches()) {
                 return true;
                 }
+            
         }
         return false;    
     
