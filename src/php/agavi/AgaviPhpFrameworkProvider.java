@@ -41,6 +41,7 @@
  */
 package php.agavi;
 
+import java.util.prefs.Preferences;
 import org.netbeans.modules.versioning.spi.VersioningSystem;
 import php.agavi.commands.AgaviFrameworkCommandSupport;
 import php.agavi.editor.AgaviEditorExtender;
@@ -133,35 +134,43 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      * @return {@link FileObject} or {@code null} if not found
      */
     public static FileObject locate(FileObject startDir, String relativePath, boolean subdirs) {
-        
-         VersioningManager vManager = VersioningManager.getInstance();
+    
+        VersioningManager vManager = VersioningManager.getInstance();
 
         FileObject fileObject = startDir.getFileObject(relativePath);
         if (fileObject != null || !subdirs) {
             return fileObject;
         }
+
         for (FileObject child : startDir.getChildren()) {
             
             File childFile = FileUtil.toFile(child);
             
             if (childFile != null) {
                 VersioningSystem owner = vManager.getOwner(childFile);
-                if (!owner.getVisibilityQuery().isVisible(childFile)) {
+                if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
             }            
-            
             fileObject = child.getFileObject(relativePath);
             
             if (fileObject != null) {
                 return fileObject;
-            } else if (child.isFolder()) {
-                fileObject = locate(child, relativePath, subdirs);
-                if (fileObject != null)
-                    return fileObject;
             }
+            
+            if (child.isFolder()) {
+                fileObject = locate(child, relativePath, subdirs);
+                if (fileObject != null) {
+                    // Break out of the loop, we found what we were looking for, 
+                    // and the fileObject variable is set
+                    break;
+                } 
+            }
+            
+            
+            
         }
-        return null;
+        return fileObject;
     }
 
     /**
@@ -173,7 +182,6 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
 
         VersioningManager vManager = VersioningManager.getInstance();
         
-        
         List<FileObject> list = Collections.synchronizedList(new ArrayList<FileObject>());
 
         for (FileObject child : startDir.getChildren()) {
@@ -182,7 +190,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             
             if (childFile != null) {
                 VersioningSystem owner = vManager.getOwner(childFile);
-                if (!owner.getVisibilityQuery().isVisible(childFile)) {
+                if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
             }
@@ -195,7 +203,6 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
                 List<FileObject> sublist = locate(child, searchPattern, subdirs);
                 if (sublist != null && sublist.size() > 0) {
                     for (FileObject fileObject : sublist) {
-                        System.out.println(fileObject.getNameExt());
                         list.add(fileObject);
                     }
                 }
@@ -217,7 +224,16 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      */
     @Override
     public boolean isInPhpModule(PhpModule phpModule) {
-        FileObject config = locate(phpModule.getSourceDirectory(), CONFIG_FILE, true);
+        Preferences preferences = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
+        String sourcesDir = preferences.get("sourcesDir", "");
+        File src;
+        if (sourcesDir.length() > 0) {
+            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourcesDir);
+        } else {
+            src = new File(phpModule.getSourceDirectory().getPath());
+        }
+        System.out.println(src.getPath());
+        FileObject config = locate(FileUtil.toFileObject(src), CONFIG_FILE, true);
         return config != null && config.isData();    
     }
 
@@ -231,7 +247,15 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     @Override
     public File[] getConfigurationFiles(PhpModule phpModule) {
         List<File> files = new LinkedList<File>();
-        FileObject appConfig = locate(phpModule.getSourceDirectory(), "app/config", true); // NOI18N
+        Preferences preferences = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
+        String sourcesDir = preferences.get("sourcesDir", "");
+        File src;
+        if (sourcesDir.length() > 0) {
+            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourcesDir);
+        } else {
+            src = new File(phpModule.getSourceDirectory().getPath());
+        }
+        FileObject appConfig = locate(FileUtil.toFileObject(src), "config", true); // NOI18N
         if (appConfig != null) {
             List<FileObject> fileObjects = new LinkedList<FileObject>();
             Enumeration<? extends FileObject> children = appConfig.getChildren(false);
