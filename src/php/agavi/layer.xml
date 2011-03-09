@@ -1,3 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
-<filesystem/>
+<filesystem>
+    <folder name="Templates">
+        <folder name="Agavi">
+            <file name="AgaviModule">
+                <attr name="displayName" bundlevalue="php.agavi.Bundle#Templates/Agavi/AgaviModule"/>
+                <attr name="instantiatingIterator" newvalue="php.agavi.ui.wizard.module.NewAgaviModuleWizardIterator"/>
+                <attr name="template" boolvalue="true"/>
+                <attr name="templateCategory" stringvalue="PHP" />
+                <attr name="templateWizardURL" urlvalue="nbresloc:/php/agavi/ui/wizard/module/newAgaviModule.html"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Projects">
+        <folder name="org-netbeans-modules-php-project">
+            <folder name="Nodes">
+                <file name="php.agavi.ui.modules.ModulesNodeFactoryImpl.instance">
+                    <attr intvalue="1200" name="position"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+    
+</filesystem>

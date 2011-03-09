@@ -40,28 +40,36 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.commands;
 
-package php.agavi.editor;
-
-import java.util.Collections;
-import java.util.List;
-import org.netbeans.modules.php.api.editor.PhpBaseElement;
-import org.netbeans.modules.php.spi.editor.EditorExtender;
-import org.openide.filesystems.FileObject;
+import java.lang.ref.WeakReference;
+import org.netbeans.modules.php.api.phpmodule.PhpModule;
+import org.netbeans.modules.php.spi.commands.FrameworkCommand;
+import php.agavi.AgaviScript;
 
 /**
- * In here we could add Agavi-specific elements for code completion
- * 
- * @author Markus Lervik
+ * @author Tomas Mysik
  */
-public class AgaviEditorExtender extends EditorExtender {
+public class AgaviCommand extends FrameworkCommand {
+    private final WeakReference<PhpModule> phpModule;
 
-    public AgaviEditorExtender() {
+    public AgaviCommand(PhpModule phpModule, String command, String description, String displayName) {
+        super(command, description, displayName);
+        assert phpModule != null;
+        this.phpModule = new WeakReference<PhpModule>(phpModule);
     }
 
     @Override
-    public List<PhpBaseElement> getElementsForCodeCompletion(FileObject fo) {
-        return Collections.emptyList();
+    protected String getHelpInternal() {
+        PhpModule module = phpModule.get();
+        if (module == null) {
+            return ""; // NOI18N
+        }
+        return "";
     }
 
+    @Override
+    public String getPreview() {
+        return AgaviScript.SCRIPT_NAME + " " + super.getPreview(); // NOI18N
+    }
 }

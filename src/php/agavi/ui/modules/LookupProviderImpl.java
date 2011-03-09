@@ -40,55 +40,34 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.ui.modules;
 
-package php.agavi;
-
-import java.io.File;
-import java.util.regex.Pattern;
-import org.openide.filesystems.FileUtil;
+import org.netbeans.api.project.Project;
+import org.netbeans.spi.project.LookupProvider;
+import org.openide.util.Lookup;
+import org.openide.util.lookup.Lookups;
+import php.agavi.AgaviPhpFrameworkProvider;
 
 /**
- *
- * @author Markus Lervik <markus.lervik@necora.fi>
+ * A lookup provider implementation for Agavi modules
+ * 
+ * @author Markus Lervik
  */
-class PropertyUtils {
+@LookupProvider.Registration(projectType = "org-netbeans-modules-php-project")
+public class LookupProviderImpl implements LookupProvider {
 
-    private static final Pattern RELATIVE_SLASH_SEPARATED_PATH = Pattern.compile("[^:/\\\\.][^:/\\\\]*(/[^:/\\\\.][^:/\\\\]*)*"); // NOI18N
-
-    
-    /**
-     * Find an absolute file path from a possibly relative path.
-     * @param basedir base file for relative filename resolving; must be an absolute path
-     * @param filename a pathname which may be relative or absolute and may
-     *                 use / or \ as the path separator
-     * @return an absolute file corresponding to it
-     * @throws IllegalArgumentException if basedir is not absolute
-     */
-    public static File resolveFile(File basedir, String filename) throws IllegalArgumentException {
-        if (basedir == null) {
-            throw new NullPointerException("null basedir passed to resolveFile"); // NOI18N
+    @Override
+    public Lookup createAdditionalLookup(Lookup lookup) {
+        
+        Project project = lookup.lookup(Project.class);
+        
+        AgaviPhpFrameworkProvider provider = 
+                lookup.lookup(AgaviPhpFrameworkProvider.class);
+        if (provider != null) {
+            return Lookups.fixed(new ModuleLookupItem(project));
         }
-        if (filename == null) {
-            throw new NullPointerException("null filename passed to resolveFile"); // NOI18N
-        }
-        if (!basedir.isAbsolute()) {
-            throw new IllegalArgumentException("nonabsolute basedir passed to resolveFile: " + basedir); // NOI18N
-        }
-        File f;
-        if (RELATIVE_SLASH_SEPARATED_PATH.matcher(filename).matches()) {
-            // Shortcut - simple relative path. Potentially faster.
-            f = new File(basedir, filename.replace('/', File.separatorChar));
-        } else {
-            // All other cases.
-            String machinePath = filename.replace('/', File.separatorChar).replace('\\', File.separatorChar);
-            f = new File(machinePath);
-            if (!f.isAbsolute()) {
-                f = new File(basedir, machinePath);
-            }
-            assert f.isAbsolute();
-        }
-        return FileUtil.normalizeFile(f);
+        return Lookups.fixed();
+        
     }
-
 
 }

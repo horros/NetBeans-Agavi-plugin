@@ -48,7 +48,8 @@ import java.util.Set;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleIgnoredFilesExtender;
 
 /**
- *
+ * A module extender to return a set of ignored files
+ * 
  * @author Markus Lervik <markus.lervik@necora.fi>
  */
 class AgaviPhpModuleIgnoredFilesExtender extends PhpModuleIgnoredFilesExtender {
@@ -56,6 +57,11 @@ class AgaviPhpModuleIgnoredFilesExtender extends PhpModuleIgnoredFilesExtender {
     public AgaviPhpModuleIgnoredFilesExtender() {
     }
 
+    /**
+     * Get a set of ignored files
+     * 
+     * @return an empty HashSet, because we don't currently ignore any files
+     */
     @Override
     public Set<File> getIgnoredFiles() {
         return new HashSet<File>();

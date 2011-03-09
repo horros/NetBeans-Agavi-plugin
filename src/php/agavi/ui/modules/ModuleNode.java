@@ -40,28 +40,61 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.ui.modules;
 
-package php.agavi.editor;
-
-import java.util.Collections;
-import java.util.List;
-import org.netbeans.modules.php.api.editor.PhpBaseElement;
-import org.netbeans.modules.php.spi.editor.EditorExtender;
-import org.openide.filesystems.FileObject;
+import java.awt.Image;
+import javax.swing.Action;
+import org.netbeans.api.project.Project;
+import org.openide.loaders.DataFolder;
+import org.openide.loaders.DataObject;
+import org.openide.loaders.DataObjectNotFoundException;
+import org.openide.nodes.FilterNode;
+import org.openide.util.ImageUtilities;
+import php.agavi.AgaviPhpFrameworkProvider;
+import php.agavi.ui.wizard.module.NewAgaviModuleWizardAction;
 
 /**
- * In here we could add Agavi-specific elements for code completion
+ * A module node representing a virtual "folder" containing Agavi modules.
+ * The icon is a folder overlaid with the small library-badge
  * 
  * @author Markus Lervik
  */
-public class AgaviEditorExtender extends EditorExtender {
+class ModuleNode extends FilterNode {
 
-    public AgaviEditorExtender() {
+    private static Image smallImage =
+            ImageUtilities.loadImage("/org/netbeans/modules/php/project/ui/resources/libraries.gif"); // NOI18N
+
+    public ModuleNode (Project proj) throws DataObjectNotFoundException {
+        super(DataObject.find(AgaviPhpFrameworkProvider.locate(proj.getProjectDirectory(), "modules", true)).getNodeDelegate());
     }
 
     @Override
-    public List<PhpBaseElement> getElementsForCodeCompletion(FileObject fo) {
-        return Collections.emptyList();
+    public String getDisplayName() {
+        return "Agavi modules";
     }
 
+    @Override
+    public Image getIcon(int type) {
+        DataFolder root = DataFolder.findFolder(org.openide.filesystems.FileUtil.getConfigRoot());
+        Image original = root.getNodeDelegate().getIcon(type);
+        return ImageUtilities.mergeImages(original, smallImage, 7, 7);
+    }
+
+    @Override
+    public Image getOpenedIcon(int type) {
+        DataFolder root = DataFolder.findFolder(org.openide.filesystems.FileUtil.getConfigRoot());
+        Image original = root.getNodeDelegate().getIcon(type);
+        return ImageUtilities.mergeImages(original, smallImage, 7, 7);
+    }
+
+    
+    @Override
+    public Action[] getActions(boolean context) {
+        
+        return NewAgaviModuleWizardAction.createActions();
+        
+    }
+    
+    
+    
 }

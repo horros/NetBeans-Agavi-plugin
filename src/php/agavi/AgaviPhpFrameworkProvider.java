@@ -59,7 +59,6 @@ import org.netbeans.modules.php.api.phpmodule.BadgeIcon;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpModuleProperties;
 import org.netbeans.modules.php.api.util.FileUtils;
-import org.netbeans.modules.php.spi.commands.FrameworkCommandSupport;
 import org.netbeans.modules.php.spi.editor.EditorExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpFrameworkProvider;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleActionsExtender;
@@ -93,7 +92,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     
     private static final Set<String> CONFIG_FILE_EXTENSIONS = new HashSet<String>();
     private static AgaviPhpFrameworkProvider INSTANCE = new AgaviPhpFrameworkProvider();
-    
+
     private final BadgeIcon badgeIcon;
 
     private AgaviPhpFrameworkProvider() {
@@ -116,7 +115,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      * 
      * @return a singleton instance of this framework provider 
      */
-    @PhpFrameworkProvider.Registration(position=100)
+    @PhpFrameworkProvider.Registration(position=101)
     public static AgaviPhpFrameworkProvider getInstance() {
         return INSTANCE;
     }
@@ -232,9 +231,14 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
         } else {
             src = new File(phpModule.getSourceDirectory().getPath());
         }
-        System.out.println(src.getPath());
+        File fConfig = null;
         FileObject config = locate(FileUtil.toFileObject(src), CONFIG_FILE, true);
-        return config != null && config.isData();    
+        if (config != null) {
+            fConfig = FileUtil.toFile(config);
+        } else {
+            return false;
+        }
+        return (fConfig != null && fConfig.exists() && fConfig.isFile());
     }
 
     /**
@@ -311,7 +315,14 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      */
     @Override
     public PhpModuleExtender createPhpModuleExtender(PhpModule phpModule) {
-        return new AgaviPhpModuleExtender();
+        if (phpModule != null) {
+            if (isInPhpModule(phpModule)) {
+                return new AgaviPhpModuleExtender(phpModule);
+            } else {
+                return null;
+            }
+        }
+        return new AgaviPhpModuleExtender(phpModule);
     }
     /**
      * Get Agavi module properties for the given PHP module (e.g. web root
@@ -369,7 +380,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      *         running external commands
      */
     @Override
-    public FrameworkCommandSupport getFrameworkCommandSupport(PhpModule phpModule) {
+    public AgaviFrameworkCommandSupport getFrameworkCommandSupport(PhpModule phpModule) {
         return new AgaviFrameworkCommandSupport(phpModule);
     }
 
@@ -385,6 +396,14 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
         return new AgaviEditorExtender();
     }
    
+    /**
+     * Create the module customiser extender for Agavi projects (this is 
+     * the code to display customisation of the projects, ie. right click on
+     * the project node and select "Properties")
+     * 
+     * @param phpModule the current PHP module object
+     * @return a new module customiser extender
+     */
     @Override
     public PhpModuleCustomizerExtender createPhpModuleCustomizerExtender(PhpModule phpModule) {
         return new AgaviPhpModuleCustomiserExtender(phpModule);

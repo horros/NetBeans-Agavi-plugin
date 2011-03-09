@@ -42,6 +42,7 @@
 
 package php.agavi;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.JComponent;
@@ -51,6 +52,7 @@ import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpProgram.InvalidPhpProgramException;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender;
 import org.openide.filesystems.FileObject;
+import org.openide.util.Exceptions;
 import org.openide.util.HelpCtx;
 import php.agavi.ui.wizard.NewProjectConfigurationPanel;
 
@@ -62,8 +64,8 @@ import php.agavi.ui.wizard.NewProjectConfigurationPanel;
 class AgaviPhpModuleExtender extends PhpModuleExtender {
 
     private NewProjectConfigurationPanel panel = null;    
-    
-    public AgaviPhpModuleExtender() {
+
+    AgaviPhpModuleExtender(PhpModule phpModule) {
     }
 
     @Override
@@ -113,17 +115,45 @@ class AgaviPhpModuleExtender extends PhpModuleExtender {
         return panel;
     }
     
+    
+    /**
+     * Extend the project with the Agavi support. This is only called for new
+     * projects, so this is the place to run Agavi's "project-create" -target.
+     * 
+     * @param phpModule
+     * @return A set of configuration files
+     * @throws org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender.ExtendingException 
+     */
     @Override
     public Set<FileObject> extend(PhpModule phpModule) throws ExtendingException {
         
         Set<FileObject> files = new HashSet<FileObject>();
+        
+        AgaviScript agaviScript = null;
+                
+        try {
+            agaviScript = AgaviScript.getDefault();
+        } catch (InvalidPhpProgramException ex) {
+            // should not happen, must be handled in the wizard
+            Exceptions.printStackTrace(ex);
+        }
+
+        try {
+            agaviScript.initProject(phpModule, new String[] {"project-create"});
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            throw new ExtendingException(ex.getMessage());
+        } catch (InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+            throw new ExtendingException(ex.getMessage());
+        }
         
         FileObject routing = AgaviPhpFrameworkProvider.locate(phpModule.getSourceDirectory(), "config/routing.xml", true); // NOI18N
         if (routing != null) {
             files.add(routing);
         }
         
-        FileObject settings = AgaviPhpFrameworkProvider.locate(phpModule.getSourceDirectory(), "config/settings.php", true); // NOI18N
+        FileObject settings = AgaviPhpFrameworkProvider.locate(phpModule.getSourceDirectory(), "config/settings.xml", true); // NOI18N
         if (settings != null) {
             files.add(settings);
         }
@@ -131,5 +161,6 @@ class AgaviPhpModuleExtender extends PhpModuleExtender {
         return files;
         
     }
+
 
 }

@@ -47,7 +47,8 @@ import org.openide.filesystems.FileObject;
 import php.agavi.util.AgaviUtils;
 
 /**
- *
+ * Attempt to navigate to a view
+ * 
  * @author Markus Lervik <markus.lervik@necora.fi>
  */
 public class AgaviGoToViewAction extends GoToViewAction {
@@ -60,6 +61,13 @@ public class AgaviGoToViewAction extends GoToViewAction {
         this.offset = offset;
     }
 
+    /**
+     * Go to (and open in the editor) a view associated with the action 
+     * passed as the fo-parameter
+     * 
+     * @see AgaviUtils#getView(org.openide.filesystems.FileObject) 
+     * @return true on success, false on failure
+     */
     @Override
     public boolean goToView() {
 

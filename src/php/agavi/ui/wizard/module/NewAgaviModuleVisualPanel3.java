@@ -40,16 +40,70 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
-package php.agavi.ui.options;
+package php.agavi.ui.wizard.module;
 
-final class AgaviPanel extends javax.swing.JPanel {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-    private final AgaviOptionsPanelController controller;
+/**
+ * Visual panel asking for the views associated with the actions to create
+ * 
+ * @author Markus Lervik
+ */
+public final class NewAgaviModuleVisualPanel3 extends JPanel {
 
-    AgaviPanel(AgaviOptionsPanelController controller) {
-        this.controller = controller;
-        initComponents();
-        // TODO listen to changes in form fields and call controller.changed()
+    private final GroupLayout layout;
+    NewAgaviModuleWizardPanel3 documentListener;
+
+    /** Creates new form NewAgaviModuleVisualPanel3 */
+    public NewAgaviModuleVisualPanel3() {
+        layout = new GroupLayout(this);
+        this.setLayout(layout);
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);        
+    }
+
+    public ArrayList<Map<String, JTextField>> addActions(String[] actions) {
+        ArrayList<Map<String, JTextField>> viewList = new ArrayList<Map<String, JTextField>>();
+        
+        GroupLayout.SequentialGroup hGroup = layout.createSequentialGroup();
+        GroupLayout.SequentialGroup vGroup = layout.createSequentialGroup();
+        
+        GroupLayout.ParallelGroup labels1 = layout.createParallelGroup();
+        GroupLayout.ParallelGroup fields1 = layout.createParallelGroup();
+        JLabel title = new JLabel("Space-separated list of views to create:");
+        vGroup.addGroup(layout.createBaselineGroup(true, true).addComponent(title));
+        for (String action : actions) {
+            JLabel l = new JLabel("Views for action " + action + ": ");
+            JTextField f = new JTextField(20);
+            f.getDocument().addDocumentListener(documentListener);
+            HashMap<String, JTextField> m = new HashMap<String, JTextField>();
+            m.put(action, f);
+            viewList.add(m);
+            labels1.addComponent(title);
+            labels1.addComponent(l);
+            fields1.addComponent(f);
+            vGroup.addGroup(layout.createParallelGroup(Alignment.BASELINE).
+                    addComponent(l).addComponent(f));
+            
+        }
+        
+        hGroup.addGroup(labels1);
+        hGroup.addGroup(fields1);
+        layout.setHorizontalGroup(hGroup);
+        layout.setVerticalGroup(vGroup);
+        return viewList;
+    }
+
+    @Override
+    public String getName() {
+        return "Views for actions";
     }
 
     /** This method is called from within the constructor to
@@ -60,53 +114,18 @@ final class AgaviPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
-
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(AgaviPanel.class, "AgaviPanel.jLabel1.text")); // NOI18N
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(jLabel1)
-                .addContainerGap(139, Short.MAX_VALUE))
+            .addGap(0, 420, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(27, 27, 27)
-                .addComponent(jLabel1)
-                .addContainerGap(27, Short.MAX_VALUE))
+            .addGap(0, 322, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    void load() {
-        // TODO read settings and initialize GUI
-        // Example:        
-        // someCheckBox.setSelected(Preferences.userNodeForPackage(AgaviPanel.class).getBoolean("someFlag", false));
-        // or for org.openide.util with API spec. version >= 7.4:
-        // someCheckBox.setSelected(NbPreferences.forModule(AgaviPanel.class).getBoolean("someFlag", false));
-        // or:
-        // someTextField.setText(SomeSystemOption.getDefault().getSomeStringProperty());
-    }
-
-    void store() {
-        // TODO store modified settings
-        // Example:
-        // Preferences.userNodeForPackage(AgaviPanel.class).putBoolean("someFlag", someCheckBox.isSelected());
-        // or for org.openide.util with API spec. version >= 7.4:
-        // NbPreferences.forModule(AgaviPanel.class).putBoolean("someFlag", someCheckBox.isSelected());
-        // or:
-        // SomeSystemOption.getDefault().setSomeStringProperty(someTextField.getText());
-    }
-
-    boolean valid() {
-        // TODO check whether form is consistent and complete
-        return true;
-    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
 }

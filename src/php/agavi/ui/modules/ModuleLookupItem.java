@@ -40,28 +40,18 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.ui.modules;
 
-package php.agavi.editor;
-
-import java.util.Collections;
-import java.util.List;
-import org.netbeans.modules.php.api.editor.PhpBaseElement;
-import org.netbeans.modules.php.spi.editor.EditorExtender;
-import org.openide.filesystems.FileObject;
+import org.netbeans.api.project.Project;
 
 /**
- * In here we could add Agavi-specific elements for code completion
+ * An empty module lookup item
  * 
  * @author Markus Lervik
  */
-public class AgaviEditorExtender extends EditorExtender {
+class ModuleLookupItem {
 
-    public AgaviEditorExtender() {
-    }
-
-    @Override
-    public List<PhpBaseElement> getElementsForCodeCompletion(FileObject fo) {
-        return Collections.emptyList();
+    public ModuleLookupItem(Project project) {
     }
 
 }

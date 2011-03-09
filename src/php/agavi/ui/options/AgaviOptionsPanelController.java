@@ -55,7 +55,7 @@ keywords = "#AdvancedOption_Keywords_Agavi",
 keywordsCategory = "org-netbeans-modules-php-project-ui-options-PHPOptionsCategory/Agavi")
 public final class AgaviOptionsPanelController extends OptionsPanelController {
 
-    private AgaviPanel panel;
+    private AgaviOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -106,9 +106,9 @@ public final class AgaviOptionsPanelController extends OptionsPanelController {
         pcs.removePropertyChangeListener(l);
     }
 
-    private AgaviPanel getPanel() {
+    private AgaviOptionsPanel getPanel() {
         if (panel == null) {
-            panel = new AgaviPanel(this);
+            panel = new AgaviOptionsPanel(this);
         }
         return panel;
     }

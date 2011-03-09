@@ -39,93 +39,68 @@
  *
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
+package php.agavi.ui.wizard.module;
 
-
-package php.agavi.ui.actions;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.prefs.Preferences;
+import java.awt.Dialog;
+import javax.swing.Action;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.spi.actions.BaseAction;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileStateInvalidException;
-import org.openide.filesystems.FileUtil;
-import org.openide.util.Exceptions;
-import php.agavi.AgaviPhpFrameworkProvider;
+import org.openide.DialogDisplayer;
+import org.openide.WizardDescriptor;
 
 /**
- * Clear the application cache
+ * Action to launch the "new module" -wizard from the modules-node context menu
  * 
- * @author Markus Lervik <markus.lervik@necora.fi>
+ * @author Markus Lervik
  */
-public final class ClearCacheAction extends BaseAction {
+public class NewAgaviModuleWizardAction extends BaseAction {
 
-    private static final ClearCacheAction INSTANCE = new ClearCacheAction();
-    
-    private ClearCacheAction() {
-        
+    private static final NewAgaviModuleWizardAction INSTANCE = new NewAgaviModuleWizardAction();
+    private WizardDescriptor wizard;
+    protected static PhpModule PHPMODULE = null;
+
+    public static Action[] createActions() {
+
+        Action[] actions = new Action[]{
+            NewAgaviModuleWizardAction.INSTANCE
+        };
+
+        return actions;
+
     }
-    
-    public static ClearCacheAction getInstance() {
-        return INSTANCE;
+    private PhpModule phpModule;
+
+    public NewAgaviModuleWizardAction() {
     }
 
     @Override
     protected String getFullName() {
-        return "Clear cache";
+        return "New Agavi module";
     }
 
     @Override
     protected String getPureName() {
-        return "Clear cache";
+        return "New Agavi module";
     }
 
     @Override
-    protected void actionPerformed(PhpModule phpModule) {
-     
-        Preferences preferences = getPreferences(phpModule);
+    protected void actionPerformed(PhpModule pm) {
+
+        NewAgaviModuleWizardAction.PHPMODULE = pm;
         
-        String sourceDir = preferences.get("sourcesDir", "");
-        System.out.println(sourceDir);
-        File location;
-        
-        if (!sourceDir.isEmpty()) {
-            location = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir);
-        } else {
-            location = new File(phpModule.getSourceDirectory().getPath());
+        WizardDescriptor.Iterator iterator = new NewAgaviModuleFromActitionWizardIterator();
+
+        // Yeees, shutup, I know what I'm doing. Sort of.
+        @SuppressWarnings("unchecked")
+        WizardDescriptor wizardDescriptor = new WizardDescriptor(iterator);
+        this.wizard = wizardDescriptor;
+
+        Dialog dialog = DialogDisplayer.getDefault().createDialog(wizardDescriptor);
+        dialog.setVisible(true);
+        dialog.toFront();
+
+        boolean cancelled = wizardDescriptor.getValue() != WizardDescriptor.FINISH_OPTION;
+        if (!cancelled) {
         }
-        System.out.println(location.getAbsolutePath());
-        FileObject startDir = FileUtil.toFileObject(location);
-        
-        FileObject cache = AgaviPhpFrameworkProvider.locate(startDir, "cache", true);
-        
-        if (cache != null) {
-            try {
-                try {
-                    System.out.println(cache.getURL().toURI().toString());
-                } catch (URISyntaxException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            } catch (FileStateInvalidException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-            for(FileObject child : cache.getChildren()) {
-                try {
-                    child.delete();
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
-        } else {
-            System.out.println("Could not locate cache");
-        }
-        
-        
-    }
-    
-    private static Preferences getPreferences(PhpModule module) {
-        return module.getPreferences(AgaviPhpFrameworkProvider.class, true);
     }
 }

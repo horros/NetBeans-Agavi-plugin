@@ -59,7 +59,7 @@ import php.agavi.util.AgaviUtils;
 public class AgaviGoToActionAction extends GoToActionAction {
 
     private final FileObject fo;
-    private static final Pattern ACTION_METHOD_NAME = Pattern.compile("^execute\\w+");
+    private static final Pattern ACTION_METHOD_NAME = Pattern.compile("execute(?:\\w*?)");
     /*
      * The fo-object passed is a view or a template
      */
@@ -87,29 +87,30 @@ public class AgaviGoToActionAction extends GoToActionAction {
         return false;
     }
 
+    /**
+     * Attempt to find the offset of the method declaration in the action
+     * file. This will return the offset of the first method that starts with 
+     * "execute", or DEFAULT_OFFSET if a suitable method is not found.
+     * 
+     * @param action the action file to navigate to
+     * @return the line number off the method declaration
+     */
     private int getActionMethodOffset(FileObject action) {
-        String actionMethodName = getActionMethodName(fo.getName());
+        
+        Matcher matcher = null;
+        
         EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
+        
         for (PhpClass phpClass : editorSupport.getClasses(action)) {
-            if (actionMethodName != null) {
                 for (PhpClass.Method method : phpClass.getMethods()) {
-                    if (actionMethodName.equals(method.getName())) {
+                    matcher = ACTION_METHOD_NAME.matcher(method.getName());
+                    if (matcher.matches()) {
                         return method.getOffset();
                     }
-                }
             }
             return phpClass.getOffset();
         }
         return DEFAULT_OFFSET;
     }
 
-    static String getActionMethodName(String filename) {
-        Matcher matcher = ACTION_METHOD_NAME.matcher(filename);
-        if (matcher.find()) {
-            String group = matcher.group(1);
-            return AgaviUtils.ACTION_METHOD_PREFIX + group.substring(0, 1).toUpperCase() + group.substring(1);
-        }
-        return null;
-
-    }
 }

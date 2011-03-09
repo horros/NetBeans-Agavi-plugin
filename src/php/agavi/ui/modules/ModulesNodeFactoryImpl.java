@@ -40,16 +40,49 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.ui.modules;
 
-package php.agavi;
+import org.netbeans.api.project.Project;
+import org.netbeans.modules.php.api.phpmodule.PhpModule;
+import org.netbeans.spi.project.ui.support.NodeFactory;
+import org.netbeans.spi.project.ui.support.NodeFactorySupport;
+import org.netbeans.spi.project.ui.support.NodeList;
+import org.openide.loaders.DataObjectNotFoundException;
+import org.openide.util.Exceptions;
+import php.agavi.AgaviPhpFrameworkProvider;
 
 /**
- *
- * @author Markus Lervik <markus.lervik@necora.fi>
+ * A node factory that creates the modules-node
+ * NOTE: This should use LookupProviderImpl and ModuleLookupItem
+ * 
+ * @author Markus Lervik
  */
-class AgaviPhpModuleProperties {
+public class ModulesNodeFactoryImpl implements NodeFactory {
 
-    public AgaviPhpModuleProperties() {
+    @Override
+    public NodeList<?> createNodes(Project project) {
+
+
+        if (AgaviPhpFrameworkProvider.locate(project.getProjectDirectory(), "modules", true) == null) {
+            return NodeFactorySupport.fixedNodeList();
+        }
+
+        PhpModule phpModule = PhpModule.lookupPhpModule(project);
+        
+        if (phpModule != null) {
+            if (!AgaviPhpFrameworkProvider.getInstance().isInPhpModule(phpModule)) {
+                return NodeFactorySupport.fixedNodeList();
+            }
+        }
+        
+        try {
+            ModuleNode nd = new ModuleNode(project);
+            return NodeFactorySupport.fixedNodeList(nd);
+        } catch (DataObjectNotFoundException donfe) {
+            Exceptions.printStackTrace(donfe);
+        }
+
+        return NodeFactorySupport.fixedNodeList();
+
     }
-
 }

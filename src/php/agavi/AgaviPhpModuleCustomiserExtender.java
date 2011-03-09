@@ -63,7 +63,6 @@ public class AgaviPhpModuleCustomiserExtender extends PhpModuleCustomizerExtende
 
     AgaviPhpModuleCustomiserExtender(PhpModule phpModule) {
         this.phpModule = phpModule;
-
         originalState = isCacheDirectoryIgnored(phpModule);
         originalSourceDir = getSourceDir(phpModule);
     }
@@ -109,6 +108,12 @@ public class AgaviPhpModuleCustomiserExtender extends PhpModuleCustomizerExtende
         return null;
     }
 
+    /**
+     * Save the project properties
+     * 
+     * @param phpModule the current PHP module
+     * @return Change.SOURCES_CHANGE to tell the PHP module that the source directory has change, null if no changes
+     */
     @Override
     public EnumSet<Change> save(PhpModule phpModule) {
         String sourcesDir = component.getSourcesDir();
