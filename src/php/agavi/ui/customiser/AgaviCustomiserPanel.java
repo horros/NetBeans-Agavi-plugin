@@ -45,6 +45,7 @@ package php.agavi.ui.customiser;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.project.PhpProject;
 import org.netbeans.modules.php.project.ui.Utils;
+import org.netbeans.modules.php.project.util.PhpProjectUtils;
 
 
 /**
@@ -116,7 +117,7 @@ public class AgaviCustomiserPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        PhpProject phpProject = org.netbeans.modules.php.project.util.PhpProjectUtils.getPhpProject(this.phpModule.getSourceDirectory());
+        PhpProject phpProject = PhpProjectUtils.getPhpProject(this.phpModule.getSourceDirectory());
         String browseSourceFolder = Utils.browseSourceFolder(phpProject, "");
         jLabel2.setText(browseSourceFolder);
     }//GEN-LAST:event_jButton1ActionPerformed

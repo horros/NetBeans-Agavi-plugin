@@ -47,9 +47,11 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.swing.JComponent;
 import javax.swing.event.ChangeListener;
+import org.netbeans.api.project.Project;
 import org.netbeans.modules.php.api.phpmodule.PhpInterpreter;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpProgram.InvalidPhpProgramException;
+import org.netbeans.modules.php.project.PhpProject;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Exceptions;
@@ -126,6 +128,7 @@ class AgaviPhpModuleExtender extends PhpModuleExtender {
      */
     @Override
     public Set<FileObject> extend(PhpModule phpModule) throws ExtendingException {
+        
         
         Set<FileObject> files = new HashSet<FileObject>();
         

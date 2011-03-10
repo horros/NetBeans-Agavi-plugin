@@ -39,14 +39,18 @@
  *
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
-
 package php.agavi.ui.options;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
+import javax.swing.UIManager;
 import org.netbeans.modules.php.api.util.UiUtils;
 import org.openide.filesystems.FileChooserBuilder;
 import org.openide.filesystems.FileUtil;
+import org.openide.util.Exceptions;
+import org.openide.util.NbPreferences;
 import php.agavi.AgaviScript;
 
 /**
@@ -57,17 +61,18 @@ import php.agavi.AgaviScript;
 final class AgaviOptionsPanel extends javax.swing.JPanel {
 
     private final AgaviOptionsPanelController controller;
+    private boolean isValid = false;
 
     AgaviOptionsPanel(AgaviOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
-        // TODO listen to changes in form fields and call controller.changed()
+        errorLabel.setText("");
     }
-    
+
     public String getAgavi() {
         return agaviScriptLocation.getText();
     }
-    
+
     public void setAgavi(String agavi) {
         agaviScriptLocation.setText(agavi);
     }
@@ -84,10 +89,17 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
         agaviScriptLocation = new javax.swing.JTextField();
         browseButton = new javax.swing.JButton();
         searchButton = new javax.swing.JButton();
+        agaviVersion = new javax.swing.JLabel();
+        errorLabel = new javax.swing.JLabel();
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(AgaviOptionsPanel.class, "AgaviOptionsPanel.jLabel1.text")); // NOI18N
 
         agaviScriptLocation.setText(org.openide.util.NbBundle.getMessage(AgaviOptionsPanel.class, "AgaviOptionsPanel.agaviScriptLocation.text")); // NOI18N
+        agaviScriptLocation.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                scriptLocationKeyReleased(evt);
+            }
+        });
 
         org.openide.awt.Mnemonics.setLocalizedText(browseButton, org.openide.util.NbBundle.getMessage(AgaviOptionsPanel.class, "AgaviOptionsPanel.browseButton.text")); // NOI18N
         browseButton.addActionListener(new java.awt.event.ActionListener() {
@@ -103,19 +115,27 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(agaviVersion, org.openide.util.NbBundle.getMessage(AgaviOptionsPanel.class, "AgaviOptionsPanel.agaviVersion.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(errorLabel, org.openide.util.NbBundle.getMessage(AgaviOptionsPanel.class, "AgaviOptionsPanel.errorLabel.text")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(23, 23, 23)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(agaviScriptLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(browseButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(searchButton)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(errorLabel)
+                    .addComponent(agaviVersion)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(agaviScriptLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(browseButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(searchButton)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -127,27 +147,31 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
                     .addComponent(agaviScriptLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(browseButton)
                     .addComponent(searchButton))
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(agaviVersion)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 160, Short.MAX_VALUE)
+                .addComponent(errorLabel)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
-        File agaviScript = new FileChooserBuilder(AgaviOptionsPanel.class.getName())
-                .setTitle("Select the Agavi script")
-                .setFilesOnly(true)
-                .showOpenDialog();
+        File agaviScript = new FileChooserBuilder(AgaviOptionsPanel.class.getName()).setTitle("Select the Agavi script").setFilesOnly(true).showOpenDialog();
         if (agaviScript != null) {
             agaviScript = FileUtil.normalizeFile(agaviScript);
             agaviScriptLocation.setText(agaviScript.getAbsolutePath());
+            testAgaviFile();
         }
     }//GEN-LAST:event_browseButtonActionPerformed
 
     private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
 
         String agaviScript = UiUtils.SearchWindow.search(new UiUtils.SearchWindow.SearchWindowSupport() {
+
             @Override
             public List<String> detect() {
-                return AgaviScript.detectAgaviScript();
+                List<String> scripts = AgaviScript.detectAgaviScript();
+                return scripts;
             }
 
             @Override
@@ -172,8 +196,46 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
         });
         if (agaviScript != null) {
             agaviScriptLocation.setText(agaviScript);
+            try {
+                String version = AgaviScript.detectAgaviVersion(agaviScript);
+                agaviVersion.setText("Agavi version detected: " + version);
+                this.isValid = true;
+            } catch (FileNotFoundException ex) {
+                agaviVersion.setText("Invalid Agavi script");
+            } catch (IOException ex) {
+                agaviVersion.setText("Cannot detect Agavi version");
+                Exceptions.printStackTrace(ex);
+            }
+
         }
     }//GEN-LAST:event_searchButtonActionPerformed
+
+    private void scriptLocationKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_scriptLocationKeyReleased
+        testAgaviFile();
+
+    }
+
+    private void testAgaviFile() {
+        File f = new File(agaviScriptLocation.getText());
+        if (f == null || !f.isFile()) {
+            setError("Invalid script location");
+            agaviVersion.setText("Cannot detect Agavi version");
+            isValid = false;
+
+        } else {
+            try {
+                String version = AgaviScript.detectAgaviVersion(agaviScriptLocation.getText());
+                agaviVersion.setText("Agavi version detected: " + version);
+                setError("");
+                isValid = false;
+            } catch (FileNotFoundException ex) {
+                agaviVersion.setText("Invalid Agavi script");
+            } catch (IOException ex) {
+                agaviVersion.setText("Cannot detect Agavi version");
+                Exceptions.printStackTrace(ex);
+            }
+        }
+    }//GEN-LAST:event_scriptLocationKeyReleased
 
     void load() {
         // TODO read settings and initialize GUI
@@ -197,12 +259,20 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
 
     boolean valid() {
         // TODO check whether form is consistent and complete
-        return true;
+        return isValid;
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField agaviScriptLocation;
+    private javax.swing.JLabel agaviVersion;
     private javax.swing.JButton browseButton;
+    private javax.swing.JLabel errorLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton searchButton;
     // End of variables declaration//GEN-END:variables
+
+    public void setError(String message) {
+        errorLabel.setText(" "); // NOI18N
+        errorLabel.setForeground(UIManager.getColor("nb.errorForeground")); // NOI18N
+        errorLabel.setText(message);
+    }
 }

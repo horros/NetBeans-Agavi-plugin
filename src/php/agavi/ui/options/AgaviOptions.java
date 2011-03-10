@@ -39,7 +39,6 @@
  *
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
-
 package php.agavi.ui.options;
 
 import java.util.List;
@@ -56,22 +55,19 @@ import php.agavi.AgaviScript;
  * @author Markus Lervik
  */
 public final class AgaviOptions {
-    
+
     // Do not change arbitrary - consult with layer's folder OptionsExport
     // Path to Preferences node for storing these preferences
     private static final String PREFERENCES_PATH = "agavi"; // NOI18N
-
     private static final AgaviOptions INSTANCE = new AgaviOptions();
-
     // agavi script
     private static final String AGAVI = "agavi"; // NOI18N
-
     final ChangeSupport changeSupport = new ChangeSupport(this);
-
     private volatile boolean agaviSearched = false;
 
     private AgaviOptions() {
         getPreferences().addPreferenceChangeListener(new PreferenceChangeListener() {
+
             @Override
             public void preferenceChange(PreferenceChangeEvent evt) {
                 changeSupport.fireChange();
@@ -93,46 +89,20 @@ public final class AgaviOptions {
 
     /**
      * Get the location of the Agavi batch file / shell script
-     * Attempts to search for it if it's not already set, and make
-     * a really stupid assumtion that it's the first entry in the
-     * detected files.
-     * TODO: Make the detection more clever.
      * 
      * @return a path to the Agavi script, or null if we don't find one
      */
     public synchronized String getAgavi() {
         String agavi = getPreferences().get(AGAVI, null);
         if (agavi == null && !agaviSearched) {
-            agaviSearched = true;
-            List<String> scripts = AgaviScript.detectAgaviScript();
-            if (!scripts.isEmpty()) {
-                agavi = scripts.get(0);
-                setAgavi(agavi);
-            } else {
-                return "";
-            }
+            return "";
         }
         return agavi;
     }
 
     public void setAgavi(String agavi) {
+        System.out.println("Setting Agavi script location...");
         getPreferences().put(AGAVI, agavi);
-    }
-
-    public String getDefaultParamsForProject() {
-        return "";
-    }
-
-    public void setDefaultParamsForProject(String params) {
-        
-    }
-
-    public String getDefaultParamsForApps() {
-        return "";
-    }
-
-    public void setDefaultParamsForApps(String params) {
-        
     }
 
     private Preferences getPreferences() {

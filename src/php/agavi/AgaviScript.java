@@ -41,23 +41,33 @@
  */
 package php.agavi;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpProgram.InvalidPhpProgramException;
 import org.netbeans.modules.php.api.util.FileUtils;
 import org.netbeans.modules.php.api.util.UiUtils;
+import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import php.agavi.ui.options.AgaviOptions;
 
@@ -87,58 +97,74 @@ public class AgaviScript {
 
         List<String> files = FileUtils.findFileOnUsersPath("agavi.bat", "agavi");
         return files;
-        /*
-        String[] file = new String[2];
-        if (files.size() > 0) {
-        file[0] = files.get(0);
-        file[1] = "status";
-        } else {
+
+    }
+
+    /**
+     * Attempt to detect the Agavi version. Even though it's running regexps on every
+     * line of two files, it's guaranteed to be faster than starting the Agavi
+     * process and parsing the "Version: n.n.n" -string from the output
+     * 
+     * @param script the location of the Agavi batch file / shell script
+     * @return the version detected, or "Cannot detect Agavi version" if no version found
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    public static String detectAgaviVersion(String script) throws FileNotFoundException, IOException {
+
+        File f = new File(script);
+
+        if (f != null && f.isFile()) {
+
+            BufferedReader reader = new BufferedReader(new FileReader(f));
+            Pattern sourcePattern = Pattern.compile(".*? AGAVI_SOURCE_DIRECTORY=\"(.*?)\"");
+            Pattern majorVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.major_version', '([0-9])'\\);");
+            Pattern minorVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.minor_version', '([0-9])'\\);");
+            Pattern microVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.micro_version', '([0-9])'\\);");
+            String line;
+            StringBuilder sb = new StringBuilder();
+            String sep = System.getProperty("file.separator");
+            StringBuilder versionResultString = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                Matcher m = sourcePattern.matcher(line);
+                if (m.matches()) {
+                    sb.append(m.group(1)).append(sep).append("version.php");
+                    File version = new File(sb.toString());
+                    BufferedReader versionReader = new BufferedReader(new FileReader(version));
+                    String versionString;
+                    Matcher majorMatcher;
+                    Matcher minorMatcher;
+                    Matcher microMatcher;
+                    while ((versionString = versionReader.readLine()) != null) {
+                        majorMatcher = majorVersion.matcher(versionString);
+                        if (majorMatcher.matches()) {
+                            versionResultString.append(majorMatcher.group(1)).append(".");
+                            continue;
+                        }
+                        minorMatcher = minorVersion.matcher(versionString);
+                        if (minorMatcher.matches()) {
+                            versionResultString.append(minorMatcher.group(1)).append(".");
+                            continue;
+                        }
+                        microMatcher = microVersion.matcher(versionString);
+                        if (microMatcher.matches()) {
+                            versionResultString.append(microMatcher.group(1));
+                            return versionResultString.toString();
+                        }
+                    }
+                    
+                    
+                }
+                
+                
+            }
+            
+            return "Cannot detect Agavi version";
+
+        }
+
+
         return null;
-        }
-        
-        Runtime rt = Runtime.getRuntime();
-        Process p = null;
-        BufferedReader br = null;
-        String line;
-        Pattern re = Pattern.compile("\\s+\\[echo\\]\\s+Installation directory:\\s+(.*?)");
-        StringBuilder sb = new StringBuilder();
-        String sep = System.getProperty("file.separator");
-        try {
-        p = rt.exec(file);
-        br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while ((line = br.readLine()) != null) {
-        Matcher m = re.matcher(line);
-        if (m.matches()) {
-        sb.append(m.group(1));
-        sb.append(sep).append("build").append(sep).append("agavi").append(sep).append("script").append(sep).append("agavi.php");
-        File f = new File(sb.toString());
-        if (f.isFile()) {
-        String absolutePath = FileUtil.normalizeFile(f).getAbsolutePath();
-        ArrayList<String> al = new ArrayList<String>();
-        al.add(absolutePath);
-        return al;
-        }
-        
-        }
-        }
-        
-        } catch (IOException ex) {
-        Exceptions.printStackTrace(ex);
-        } finally {
-        if (p != null) {
-        p.destroy();
-        }
-        if (br != null) {
-        try {
-        br.close();
-        } catch (IOException ex) {
-        Exceptions.printStackTrace(ex);
-        }
-        }
-        }
-        
-        return null;
-         */
 
     }
     private String projectPath;
@@ -157,13 +183,12 @@ public class AgaviScript {
      */
     public static AgaviScript getDefault() throws InvalidPhpProgramException {
         String agavi = AgaviOptions.getInstance().getAgavi();
+        System.out.println("Agavi path: " + agavi);
         if (agavi.equals("")) {
             throw new InvalidPhpProgramException("Invalid Agavi script");
         }
         return new AgaviScript(agavi);
     }
-
-
 
     /**
      * @return full IDE options Agavi path
@@ -223,7 +248,7 @@ public class AgaviScript {
             lineNum = 0;
             StringBuilder buffer = new StringBuilder();
             int ch;
-            
+
             // Read the output from the Agavi script until it's finished
             while ((ch = stdout.read()) > -1) {
 
@@ -231,7 +256,7 @@ public class AgaviScript {
                 if ((char) ch == '\r') {
                     continue;
                 }
-                
+
                 // If we recieve a new line, it means the script has printed
                 // a whole line, and process that. If not, check if there are
                 // still data in the buffer. If there isn't, we can assume that
@@ -332,7 +357,7 @@ public class AgaviScript {
         Process agavi = null;
         PrintWriter stdin = null;
         InputStream stdout = null;
-        ProcessBuilder pb = new ProcessBuilder(AgaviOptions.getInstance().getAgavi(), "module-wizard");        
+        ProcessBuilder pb = new ProcessBuilder(AgaviOptions.getInstance().getAgavi(), "module-wizard");
         pb.directory(projectDirectory);
         pb.redirectErrorStream(true);
         try {
@@ -354,10 +379,10 @@ public class AgaviScript {
                 // input
                 if ((char) ch == '\n' || stdout.available() == 0) {
                     line = buffer.toString();
-                    System.out.println(line);
+                    //System.out.println(line);
                     buffer = new StringBuilder();
                     processModuleWizardLines(line, stdin, moduleName, actions, actionViews, progressBar);
-                    
+
                     // XXX Need to dissect the Agavi build system and rewrite it in Java.
                     // There's no way of knowing if something went horribly
                     // wrong when running the script, eg. it's waiting for input
@@ -365,7 +390,7 @@ public class AgaviScript {
                     // -1 from the buffer, and the buffer WILL be empty, but that will
                     // also happen if we're waiting for the build script to generate
                     // files (we are reading data faster than the script will output it).
-                    
+
                     continue;
                 }
 
@@ -389,9 +414,9 @@ public class AgaviScript {
             if (agavi != null) {
                 agavi.destroy();
             }
-           
+
         }
-        
+
         return retval;
 
 
@@ -418,8 +443,8 @@ public class AgaviScript {
             progress.progress(actionNum);
             return true;
         }
-        
-        
+
+
         if (line.startsWith("Space-separated list of actions to create for")) {
             StringBuilder sb = new StringBuilder();
             for (String action : actions) {
@@ -433,8 +458,8 @@ public class AgaviScript {
             progress.progress(actionNum);
             return true;
         }
-        
-        
+
+
         if (line.startsWith("Space-separated list of views to create for")) {
             for (String action : actions) {
                 if (line.startsWith("Space-separated list of views to create for " + action)) {
@@ -451,9 +476,9 @@ public class AgaviScript {
                     stdin.flush();
                     return true;
                 }
-            }   
+            }
         }
-        
+
         return false;
 
 

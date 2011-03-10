@@ -45,6 +45,8 @@ package php.agavi.ui.options;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import javax.swing.JComponent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
@@ -53,7 +55,7 @@ import org.openide.util.Lookup;
 displayName = "#AdvancedOption_DisplayName_Agavi",
 keywords = "#AdvancedOption_Keywords_Agavi",
 keywordsCategory = "org-netbeans-modules-php-project-ui-options-PHPOptionsCategory/Agavi")
-public final class AgaviOptionsPanelController extends OptionsPanelController {
+public final class AgaviOptionsPanelController extends OptionsPanelController implements ChangeListener {
 
     private AgaviOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
@@ -61,12 +63,14 @@ public final class AgaviOptionsPanelController extends OptionsPanelController {
 
     @Override
     public void update() {
+        panel.setAgavi(getOptions().getAgavi());
         getPanel().load();
         changed = false;
     }
 
     @Override
     public void applyChanges() {
+        getOptions().setAgavi(panel.getAgavi());
         getPanel().store();
         changed = false;
     }
@@ -114,6 +118,19 @@ public final class AgaviOptionsPanelController extends OptionsPanelController {
     }
 
     void changed() {
+        if (!changed) {
+            changed = true;
+            pcs.firePropertyChange(OptionsPanelController.PROP_CHANGED, false, true);
+        }
+        pcs.firePropertyChange(OptionsPanelController.PROP_VALID, null, null);
+    }
+    
+    private AgaviOptions getOptions() {
+        return AgaviOptions.getInstance();
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
         if (!changed) {
             changed = true;
             pcs.firePropertyChange(OptionsPanelController.PROP_CHANGED, false, true);
