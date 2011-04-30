@@ -62,6 +62,7 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
 
     private final AgaviOptionsPanelController controller;
     private boolean isValid = false;
+    String agaviInstallPath = "";
 
     AgaviOptionsPanel(AgaviOptionsPanelController controller) {
         this.controller = controller;
@@ -76,6 +77,7 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
     public void setAgavi(String agavi) {
         agaviScriptLocation.setText(agavi);
     }
+    
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -197,9 +199,15 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
         if (agaviScript != null) {
             agaviScriptLocation.setText(agaviScript);
             try {
-                String version = AgaviScript.detectAgaviVersion(agaviScript);
-                agaviVersion.setText("Agavi version detected: " + version);
-                this.isValid = true;
+                String installPath = AgaviScript.locateAgaviInstall(agaviScript);
+                if (!installPath.equals("")) {
+                    this.agaviInstallPath = installPath;
+                    String version = AgaviScript.detectAgaviVersion(agaviInstallPath);
+                    agaviVersion.setText("Agavi version detected: " + version);
+                    this.isValid = true;
+                } else {
+                    agaviVersion.setText("Could not locate Agavi install path");
+                }
             } catch (FileNotFoundException ex) {
                 agaviVersion.setText("Invalid Agavi script");
             } catch (IOException ex) {
@@ -224,7 +232,9 @@ final class AgaviOptionsPanel extends javax.swing.JPanel {
 
         } else {
             try {
-                String version = AgaviScript.detectAgaviVersion(agaviScriptLocation.getText());
+                String installPath = AgaviScript.locateAgaviInstall(agaviScriptLocation.getText());
+                String version = AgaviScript.detectAgaviVersion(installPath);
+                this.agaviInstallPath = installPath;
                 agaviVersion.setText("Agavi version detected: " + version);
                 setError("");
                 isValid = false;

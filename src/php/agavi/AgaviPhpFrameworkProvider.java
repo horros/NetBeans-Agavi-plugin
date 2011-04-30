@@ -65,7 +65,7 @@ import org.netbeans.modules.php.spi.phpmodule.PhpModuleActionsExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleCustomizerExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleExtender;
 import org.netbeans.modules.php.spi.phpmodule.PhpModuleIgnoredFilesExtender;
-import org.netbeans.modules.versioning.VersioningManager;
+import org.netbeans.modules.versioning.spi.VersioningSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.ImageUtilities;
@@ -134,8 +134,6 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      */
     public static FileObject locate(FileObject startDir, String relativePath, boolean subdirs) {
     
-        VersioningManager vManager = VersioningManager.getInstance();
-
         FileObject fileObject = startDir.getFileObject(relativePath);
         if (fileObject != null || !subdirs) {
             return fileObject;
@@ -146,7 +144,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             File childFile = FileUtil.toFile(child);
             
             if (childFile != null) {
-                VersioningSystem owner = vManager.getOwner(childFile);
+                VersioningSystem owner = VersioningSupport.getOwner(childFile);
                 if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
@@ -178,8 +176,6 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
      * @return {@link FileObject} or {@code null} if not found
      */
     public static List<FileObject> locate(FileObject startDir, Pattern searchPattern, boolean subdirs) {
-
-        VersioningManager vManager = VersioningManager.getInstance();
         
         List<FileObject> list = Collections.synchronizedList(new ArrayList<FileObject>());
 
@@ -188,7 +184,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             File childFile = FileUtil.toFile(child);
             
             if (childFile != null) {
-                VersioningSystem owner = vManager.getOwner(childFile);
+                VersioningSystem owner = VersioningSupport.getOwner(childFile);
                 if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }

@@ -71,6 +71,7 @@ public final class AgaviOptionsPanelController extends OptionsPanelController im
     @Override
     public void applyChanges() {
         getOptions().setAgavi(panel.getAgavi());
+        getOptions().setAgaviInstallPath(panel.agaviInstallPath);
         getPanel().store();
         changed = false;
     }

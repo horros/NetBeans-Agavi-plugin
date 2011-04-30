@@ -41,20 +41,16 @@
  */
 package php.agavi;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -67,7 +63,6 @@ import org.netbeans.modules.php.api.phpmodule.PhpModule;
 import org.netbeans.modules.php.api.phpmodule.PhpProgram.InvalidPhpProgramException;
 import org.netbeans.modules.php.api.util.FileUtils;
 import org.netbeans.modules.php.api.util.UiUtils;
-import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import php.agavi.ui.options.AgaviOptions;
 
@@ -85,6 +80,14 @@ public class AgaviScript {
     public static final String OPTIONS_SUB_PATH = "Agavi"; // NOI18N
     public static final String CMD_INIT_PROJECT = "project-create"; // NOI18N
     public static final String CMD_CLEAR_CACHE = "project-cache-remove"; // NOI18N
+    public static final String actions = "actions";
+    public static final String cache = "cache";
+    public static final String config = "config";
+    public static final String lib = "lib";
+    public static final String modules = "models";
+    public static final String templates = "templates";
+    public static final String validate = "validate";
+    public static final String views = "views";
 
     /**
      * Attempt to find files named "agavi.bat" or "agavi" on the user's PATH.
@@ -100,6 +103,27 @@ public class AgaviScript {
 
     }
 
+    public static String locateAgaviInstall(String script) throws FileNotFoundException, IOException {
+
+        File f = new File(script);
+
+        if (f != null && f.isFile()) {
+
+            BufferedReader reader = new BufferedReader(new FileReader(f));
+            Pattern sourcePattern = Pattern.compile(".*? AGAVI_SOURCE_DIRECTORY=\"(.*?)\"");
+            String line;
+            while ((line = reader.readLine()) != null) {
+
+                Matcher m = sourcePattern.matcher(line);
+                if (m.matches()) {
+                    return m.group(1);
+                }
+
+            }
+        }
+        return "";
+    }
+
     /**
      * Attempt to detect the Agavi version. Even though it's running regexps on every
      * line of two files, it's guaranteed to be faster than starting the Agavi
@@ -110,61 +134,53 @@ public class AgaviScript {
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    public static String detectAgaviVersion(String script) throws FileNotFoundException, IOException {
+    public static String detectAgaviVersion(String agaviInstallPath) throws FileNotFoundException, IOException {
 
-        File f = new File(script);
+        StringBuilder sb = new StringBuilder();
+        String sep = System.getProperty("file.separator");
 
-        if (f != null && f.isFile()) {
+        sb.append(agaviInstallPath).append(sep).append("version.php");
 
-            BufferedReader reader = new BufferedReader(new FileReader(f));
-            Pattern sourcePattern = Pattern.compile(".*? AGAVI_SOURCE_DIRECTORY=\"(.*?)\"");
-            Pattern majorVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.major_version', '([0-9])'\\);");
-            Pattern minorVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.minor_version', '([0-9])'\\);");
-            Pattern microVersion  = Pattern.compile("\\s*AgaviConfig::set\\('agavi.micro_version', '([0-9])'\\);");
-            String line;
-            StringBuilder sb = new StringBuilder();
-            String sep = System.getProperty("file.separator");
-            StringBuilder versionResultString = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                Matcher m = sourcePattern.matcher(line);
-                if (m.matches()) {
-                    sb.append(m.group(1)).append(sep).append("version.php");
-                    File version = new File(sb.toString());
-                    BufferedReader versionReader = new BufferedReader(new FileReader(version));
-                    String versionString;
-                    Matcher majorMatcher;
-                    Matcher minorMatcher;
-                    Matcher microMatcher;
-                    while ((versionString = versionReader.readLine()) != null) {
-                        majorMatcher = majorVersion.matcher(versionString);
-                        if (majorMatcher.matches()) {
-                            versionResultString.append(majorMatcher.group(1)).append(".");
-                            continue;
-                        }
-                        minorMatcher = minorVersion.matcher(versionString);
-                        if (minorMatcher.matches()) {
-                            versionResultString.append(minorMatcher.group(1)).append(".");
-                            continue;
-                        }
-                        microMatcher = microVersion.matcher(versionString);
-                        if (microMatcher.matches()) {
-                            versionResultString.append(microMatcher.group(1));
-                            return versionResultString.toString();
-                        }
-                    }
-                    
-                    
-                }
-                
-                
+        File version = new File(sb.toString());
+
+        Pattern majorVersion = Pattern.compile("\\s*AgaviConfig::set\\('agavi.major_version', '([0-9])'\\);");
+        Pattern minorVersion = Pattern.compile("\\s*AgaviConfig::set\\('agavi.minor_version', '([0-9])'\\);");
+        Pattern microVersion = Pattern.compile("\\s*AgaviConfig::set\\('agavi.micro_version', '([0-9])'\\);");
+
+        StringBuilder versionResultString = new StringBuilder();
+        BufferedReader versionReader = new BufferedReader(new FileReader(version));
+
+        String versionString;
+        Matcher majorMatcher;
+        Matcher minorMatcher;
+        Matcher microMatcher;
+
+        while ((versionString = versionReader.readLine()) != null) {
+
+            majorMatcher = majorVersion.matcher(versionString);
+
+            if (majorMatcher.matches()) {
+                versionResultString.append(majorMatcher.group(1)).append(".");
+                continue;
             }
-            
-            return "Cannot detect Agavi version";
+
+            minorMatcher = minorVersion.matcher(versionString);
+
+            if (minorMatcher.matches()) {
+                versionResultString.append(minorMatcher.group(1)).append(".");
+                continue;
+            }
+
+            microMatcher = microVersion.matcher(versionString);
+
+            if (microMatcher.matches()) {
+                versionResultString.append(microMatcher.group(1));
+                return versionResultString.toString();
+            }
 
         }
 
-
-        return null;
+        return "Cannot detect Agavi version";
 
     }
     private String projectPath;
@@ -172,6 +188,7 @@ public class AgaviScript {
     private int lineNum;
     private String pName;
     private int actionNum = 0;
+    private String agaviInstallPath;
 
     AgaviScript(String script) {
     }
@@ -182,12 +199,12 @@ public class AgaviScript {
      * @throws InvalidPhpProgramException if Agavi script is not valid.
      */
     public static AgaviScript getDefault() throws InvalidPhpProgramException {
-        String agavi = AgaviOptions.getInstance().getAgavi();
-        System.out.println("Agavi path: " + agavi);
-        if (agavi.equals("")) {
-            throw new InvalidPhpProgramException("Invalid Agavi script");
+        String agaviInstallPath = AgaviOptions.getInstance().getAgaviInstallPath();
+        System.out.println("Agavi path: " + agaviInstallPath);
+        if (agaviInstallPath.equals("") || agaviInstallPath == null) {
+            throw new InvalidPhpProgramException("Invalid Agavi location");
         }
-        return new AgaviScript(agavi);
+        return new AgaviScript(agaviInstallPath);
     }
 
     /**
@@ -292,6 +309,88 @@ public class AgaviScript {
 
         return AgaviPhpFrameworkProvider.getInstance().isInPhpModule(phpModule);
     }
+    /*
+    public boolean initProject(PhpModule phpModule, String[] params) throws IOException, InterruptedException {
+    
+    this.projectName = phpModule.getDisplayName();
+    this.projectPath = phpModule.getSourceDirectory().getPath();
+    this.agaviInstallPath = AgaviOptions.getInstance().getAgaviInstallPath();
+    
+    System.out.println(agaviInstallPath);
+    
+    pName = removeSpaces(projectName);
+    pName = Character.toUpperCase(pName.charAt(0)) + pName.toLowerCase().substring(1);
+    
+    AgaviPaths paths = new AgaviPaths(agaviInstallPath);
+    
+    paths.setAppDir(projectPath + System.getProperty("file.separator") + "app");
+    
+    HashMap<String, String> properties = new HashMap<String,String>();
+    
+    properties.put("project.name", this.projectName);
+    properties.put("project.prefix", pName);
+    properties.put("template.extension.default", "php");
+    properties.put("templates.directory", paths.TEMPLATES);
+    
+    File props = new File(projectPath + System.getProperty("file.separator") + "build.properties");
+    
+    PropertyWriter propWriter = new PropertyWriter(props);
+    propWriter.writeProperties(properties);
+    
+    FileInputStream fis   = new FileInputStream(new File(paths.TEMPLATES + "/build.xml.tmpl"));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+    
+    TokenReplacingPrintStream writer = new TokenReplacingPrintStream(new File(projectPath + "/build.xml"));
+    
+    HashMap<String, String>xmlTokens = new HashMap<String, String>();
+    xmlTokens.put("%%PROJECT_NAME%%", projectName);
+    writer.setTokens(xmlTokens);
+    String line;
+    
+    while ((line = reader.readLine()) != null) {
+    writer.println(line);
+    }
+    
+    writer.flush();
+    writer.close();
+    reader.close();
+    
+    new File(paths.app).mkdirs();
+    new File(paths.cache).mkdirs();
+    new File(paths.config).mkdirs();
+    new File(paths.dev).mkdirs();
+    new File(paths.dev_pub).mkdirs();
+    new File(paths.lib).mkdirs();
+    new File(paths.libs).mkdirs();
+    new File(paths.models).mkdirs();
+    new File(paths.modules).mkdirs();
+    new File(paths.pub).mkdirs();
+    new File(paths.templates).mkdirs();
+    
+    fis = new FileInputStream(new File(paths.TEMPLATES + "/app/config.php.tmpl"));
+    reader = new BufferedReader(new InputStreamReader(fis));
+    
+    xmlTokens = new HashMap<String, String>();
+    xmlTokens.put("%%PROJECT_NAME%%", projectName);
+    xmlTokens.put("%%AGAVI_SOURCE_LOCATION%%", agaviInstallPath);
+    xmlTokens.put("%%PROJECT_LOCATION%%", projectPath);
+    xmlTokens.put("%%PROJECT_PREFIX%%", pName);
+    xmlTokens.put("%%TEMPLATE_EXTENSION%%", "php");
+    xmlTokens.put("%%TEMPLATES_LOCATION%%", paths.TEMPLATES);
+    
+    writer = new TokenReplacingPrintStream(new File(projectPath + "/app/config.php"));
+    writer.setTokens(xmlTokens);
+    
+    line = "";
+    
+    while ((line = reader.readLine()) != null) {
+    writer.println(line);
+    }
+    
+    
+    return false;
+    }
+     */
 
     /**
      * Merge two arrays into a third array

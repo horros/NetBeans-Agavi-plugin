@@ -62,6 +62,7 @@ public final class AgaviOptions {
     private static final AgaviOptions INSTANCE = new AgaviOptions();
     // agavi script
     private static final String AGAVI = "agavi"; // NOI18N
+    private static final String AGAVI_INSTALL_PATH = "agaviInstallPath";
     final ChangeSupport changeSupport = new ChangeSupport(this);
     private volatile boolean agaviSearched = false;
 
@@ -103,6 +104,14 @@ public final class AgaviOptions {
     public void setAgavi(String agavi) {
         System.out.println("Setting Agavi script location...");
         getPreferences().put(AGAVI, agavi);
+    }
+
+    public synchronized String getAgaviInstallPath() {
+        return getPreferences().get(AGAVI_INSTALL_PATH, "");
+    }
+
+    public void setAgaviInstallPath(String agaviInstallPath) {
+        getPreferences().put(AGAVI_INSTALL_PATH, agaviInstallPath);
     }
 
     private Preferences getPreferences() {
