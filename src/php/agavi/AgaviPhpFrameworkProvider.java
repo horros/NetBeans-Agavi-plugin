@@ -42,6 +42,7 @@
 package php.agavi;
 
 import java.util.prefs.Preferences;
+import org.netbeans.modules.versioning.spi.VCSVisibilityQuery;
 import org.netbeans.modules.versioning.spi.VersioningSystem;
 import php.agavi.commands.AgaviFrameworkCommandSupport;
 import php.agavi.editor.AgaviEditorExtender;
@@ -145,7 +146,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             
             if (childFile != null) {
                 VersioningSystem owner = VersioningSupport.getOwner(childFile);
-                if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
+                if (owner != null && owner.getVisibilityQuery() != null && owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
             }            
@@ -227,6 +228,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
         } else {
             src = new File(phpModule.getSourceDirectory().getPath());
         }
+        
         File fConfig = null;
         FileObject config = locate(FileUtil.toFileObject(src), CONFIG_FILE, true);
         if (config != null) {
