@@ -180,8 +180,10 @@ public final class NewAgaviModuleFromActitionWizardIterator implements WizardDes
                 DialogDisplayer.getDefault().notify(
                         new NotifyDescriptor.Message(
                         "Something went horribly wrong while generating the module!\n"
-                        + "Are you sure this is a proper Agavi project and the Agavi script\n"
-                        + "is properly installed and working?",
+                        + "Are you sure this is a proper Agavi project, the Agavi script\n"
+                        + "is properly installed and working and if you have set a \n"
+												+ "custom location for your sources that the directory contains a\n"
+												+ "build.properties and a build.xml -file?",
                         NotifyDescriptor.ERROR_MESSAGE));
             }
         }

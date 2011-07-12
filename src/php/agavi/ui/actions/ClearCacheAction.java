@@ -88,7 +88,6 @@ public final class ClearCacheAction extends BaseAction {
         Preferences preferences = getPreferences(phpModule);
         
         String sourceDir = preferences.get("sourcesDir", "");
-        System.out.println(sourceDir);
         File location;
         
         if (!sourceDir.isEmpty()) {
@@ -96,21 +95,11 @@ public final class ClearCacheAction extends BaseAction {
         } else {
             location = new File(phpModule.getSourceDirectory().getPath());
         }
-        System.out.println(location.getAbsolutePath());
         FileObject startDir = FileUtil.toFileObject(location);
         
         FileObject cache = AgaviPhpFrameworkProvider.locate(startDir, "cache", true);
         
-        if (cache != null) {
-            try {
-                try {
-                    System.out.println(cache.getURL().toURI().toString());
-                } catch (URISyntaxException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            } catch (FileStateInvalidException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+        if (cache != null) {            
             for(FileObject child : cache.getChildren()) {
                 try {
                     child.delete();
@@ -118,10 +107,7 @@ public final class ClearCacheAction extends BaseAction {
                     Exceptions.printStackTrace(ex);
                 }
             }
-        } else {
-            System.out.println("Could not locate cache");
-        }
-        
+        }        
         
     }
     

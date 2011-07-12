@@ -102,7 +102,6 @@ public final class AgaviOptions {
     }
 
     public void setAgavi(String agavi) {
-        System.out.println("Setting Agavi script location...");
         getPreferences().put(AGAVI, agavi);
     }
 

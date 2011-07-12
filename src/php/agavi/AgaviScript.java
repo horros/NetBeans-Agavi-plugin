@@ -56,6 +56,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netbeans.api.progress.ProgressHandle;
@@ -88,6 +89,9 @@ public class AgaviScript {
     public static final String templates = "templates";
     public static final String validate = "validate";
     public static final String views = "views";
+		private static final int LINE_OK = 0;
+		private static final int LINE_SKIPPED = 1;
+		private static final int LINE_UNEXPECTED = 2;
 
     /**
      * Attempt to find files named "agavi.bat" or "agavi" on the user's PATH.
@@ -200,7 +204,6 @@ public class AgaviScript {
      */
     public static AgaviScript getDefault() throws InvalidPhpProgramException {
         String agaviInstallPath = AgaviOptions.getInstance().getAgaviInstallPath();
-        System.out.println("Agavi path: " + agaviInstallPath);
         if (agaviInstallPath.equals("") || agaviInstallPath == null) {
             throw new InvalidPhpProgramException("Invalid Agavi location");
         }
@@ -452,6 +455,12 @@ public class AgaviScript {
      */
     public boolean moduleWizardCommand(File projectDirectory, String moduleName, String[] actions, Map<String, String[]> actionViews, ProgressHandle progressBar) throws InterruptedException, IOException {
 
+			PhpModule phpModule = PhpModule.inferPhpModule();
+			Preferences prefs = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
+			String srcDir = prefs.get("sourceDir", "");
+			if (!srcDir.equals("")) {
+				projectDirectory = new File(projectDirectory.getPath() + "/" + srcDir);
+			}
         boolean retval = false;
         Process agavi = null;
         PrintWriter stdin = null;
@@ -459,7 +468,9 @@ public class AgaviScript {
         ProcessBuilder pb = new ProcessBuilder(AgaviOptions.getInstance().getAgavi(), "module-wizard");
         pb.directory(projectDirectory);
         pb.redirectErrorStream(true);
-        try {
+				int ret = LINE_OK;
+        
+				try {
             agavi = pb.start();
             stdin = new PrintWriter(new BufferedWriter(new OutputStreamWriter(agavi.getOutputStream())));
             stdout = agavi.getInputStream();
@@ -467,6 +478,7 @@ public class AgaviScript {
             lineNum = 0;
             StringBuilder buffer = new StringBuilder();
             int ch;
+						search:
             while ((ch = stdout.read()) > -1) {
 
                 if ((char) ch == '\r') {
@@ -478,10 +490,13 @@ public class AgaviScript {
                 // input
                 if ((char) ch == '\n' || stdout.available() == 0) {
                     line = buffer.toString();
-                    //System.out.println(line);
+                    System.out.println(line);
                     buffer = new StringBuilder();
-                    processModuleWizardLines(line, stdin, moduleName, actions, actionViews, progressBar);
+                    ret = processModuleWizardLines(line, stdin, moduleName, actions, actionViews, progressBar);
 
+										if (ret == LINE_UNEXPECTED) {
+											break search;
+										}
                     // XXX Need to dissect the Agavi build system and rewrite it in Java.
                     // There's no way of knowing if something went horribly
                     // wrong when running the script, eg. it's waiting for input
@@ -497,8 +512,12 @@ public class AgaviScript {
 
 
             }
-            agavi.waitFor();
-            retval = true;
+						if (ret != LINE_UNEXPECTED) {
+							agavi.waitFor();
+							retval = true;
+						} else {
+							retval = false;
+						}
         } catch (IOException ex) {
             retval = false;
             Exceptions.printStackTrace(ex);
@@ -532,7 +551,7 @@ public class AgaviScript {
      * @param progress the progress bar being shown at the bottom of the IDE
      * @return true on success, false on failure
      */
-    private boolean processModuleWizardLines(String line, PrintWriter stdin, String moduleName, String[] actions, Map<String, String[]> actionViews, ProgressHandle progress) {
+    private int processModuleWizardLines(String line, PrintWriter stdin, String moduleName, String[] actions, Map<String, String[]> actionViews, ProgressHandle progress) {
 
         if (line.startsWith("Module name:")) {
             this.actionNum++;
@@ -540,7 +559,7 @@ public class AgaviScript {
             stdin.println();
             stdin.flush();
             progress.progress(actionNum);
-            return true;
+            return LINE_OK;
         }
 
 
@@ -555,7 +574,7 @@ public class AgaviScript {
             stdin.flush();
             progress.setDisplayName("Creating actions...");
             progress.progress(actionNum);
-            return true;
+            return LINE_OK;
         }
 
 
@@ -573,12 +592,16 @@ public class AgaviScript {
                     stdin.print(sb.toString());
                     stdin.println();
                     stdin.flush();
-                    return true;
+                    return LINE_OK;
                 }
             }
         }
+				
+				if (line.startsWith("Project prefix [")) {
+					return LINE_UNEXPECTED;
+				}
 
-        return false;
+        return LINE_SKIPPED;
 
 
     }

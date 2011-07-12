@@ -65,7 +65,7 @@ class ModuleNode extends FilterNode {
             ImageUtilities.loadImage("/org/netbeans/modules/php/project/ui/resources/libraries.gif"); // NOI18N
 
     public ModuleNode (Project proj) throws DataObjectNotFoundException {
-        super(DataObject.find(AgaviPhpFrameworkProvider.locate(proj.getProjectDirectory(), "modules", true)).getNodeDelegate());
+        super(DataObject.find(AgaviPhpFrameworkProvider.locateInSrc(proj.getProjectDirectory(), "modules", true)).getNodeDelegate());
     }
 
     @Override

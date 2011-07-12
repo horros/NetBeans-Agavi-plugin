@@ -127,6 +127,19 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     static {
         CONFIG_FILE_EXTENSIONS.add("xml");
     }
+		
+		public static FileObject locateInSrc(FileObject startDir, String relativePath, boolean subdirs)
+		{
+			PhpModule phpModule = PhpModule.inferPhpModule();
+			Preferences preferences = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
+			String src = preferences.get("sourceDir", "");
+			if (src.equals("")) {
+				return locate(startDir, relativePath, subdirs);
+			} else {
+				FileObject fo = FileUtil.toFileObject(new File(startDir.getPath() + "/" + src + "/app"));
+				return locate(fo, relativePath, subdirs);
+			}
+		}
         
     /**
      * Try to locate (find) a <code>relativePath</code> in source directory.
@@ -146,7 +159,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             
             if (childFile != null) {
                 VersioningSystem owner = VersioningSupport.getOwner(childFile);
-                if (owner != null && owner.getVisibilityQuery() != null && owner.getVisibilityQuery().isVisible(childFile)) {
+                if (owner != null && owner.getVisibilityQuery() != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
             }            
@@ -186,7 +199,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
             
             if (childFile != null) {
                 VersioningSystem owner = VersioningSupport.getOwner(childFile);
-                if (owner != null && !owner.getVisibilityQuery().isVisible(childFile)) {
+                if (owner != null && owner.getVisibilityQuery() != null && !owner.getVisibilityQuery().isVisible(childFile)) {
                     continue;
                 }
             }
@@ -221,10 +234,10 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     @Override
     public boolean isInPhpModule(PhpModule phpModule) {
         Preferences preferences = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
-        String sourcesDir = preferences.get("sourcesDir", "");
+        String sourceDir = preferences.get("sourceDir", "");
         File src;
-        if (sourcesDir.length() > 0) {
-            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourcesDir);
+        if (sourceDir.length() > 0) {
+            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir + "/app");
         } else {
             src = new File(phpModule.getSourceDirectory().getPath());
         }
@@ -250,10 +263,10 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     public File[] getConfigurationFiles(PhpModule phpModule) {
         List<File> files = new LinkedList<File>();
         Preferences preferences = phpModule.getPreferences(AgaviPhpFrameworkProvider.class, true);
-        String sourcesDir = preferences.get("sourcesDir", "");
+        String sourceDir = preferences.get("sourceDir", "");
         File src;
-        if (sourcesDir.length() > 0) {
-            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourcesDir);
+        if (sourceDir.length() > 0) {
+            src = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir + "/app");
         } else {
             src = new File(phpModule.getSourceDirectory().getPath());
         }

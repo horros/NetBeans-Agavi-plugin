@@ -63,7 +63,7 @@ public class ModulesNodeFactoryImpl implements NodeFactory {
     public NodeList<?> createNodes(Project project) {
 
 
-        if (AgaviPhpFrameworkProvider.locate(project.getProjectDirectory(), "modules", true) == null) {
+        if (AgaviPhpFrameworkProvider.locateInSrc(project.getProjectDirectory(), "modules", true) == null) {
             return NodeFactorySupport.fixedNodeList();
         }
 

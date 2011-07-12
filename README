@@ -1,5 +1,9 @@
 
-2011-07-12 
-----------
+2011-07-12 02
+-------------
+Properly set and retrieve the custom source directory and use it when generating modules
+
+2011-07-12 01
+-------------
 Fixed the Agavi install location detection on OSX and other *nixes (Thanks to Benjamin Boerngen-Schmidt)
 Display "Agavi PHP Framework" instead of just "Agavi" when creating a new project and selecting the framework(s)

@@ -116,12 +116,14 @@ public class AgaviPhpModuleCustomiserExtender extends PhpModuleCustomizerExtende
      */
     @Override
     public EnumSet<Change> save(PhpModule phpModule) {
-        String sourcesDir = component.getSourcesDir();
-        if (!sourcesDir.equals(originalSourceDir)) {
-            getPreferences().put("sourcesDir", sourcesDir);
+        String sourceDir = component.getSourceDir();
+        if (!sourceDir.equals(originalSourceDir)) {
+            getPreferences().put("sourceDir", sourceDir);
             return EnumSet.of(Change.SOURCES_CHANGE);
-        }
-        return null;
+        } else {
+					getPreferences().put("sourceDir", getSourceDir(phpModule));
+					return EnumSet.of(Change.SOURCES_CHANGE);
+				}
     }
 
     private AgaviCustomiserPanel getPanel() {
