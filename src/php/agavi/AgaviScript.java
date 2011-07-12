@@ -110,7 +110,7 @@ public class AgaviScript {
         if (f != null && f.isFile()) {
 
             BufferedReader reader = new BufferedReader(new FileReader(f));
-            Pattern sourcePattern = Pattern.compile(".*? AGAVI_SOURCE_DIRECTORY=\"(.*?)\"");
+            Pattern sourcePattern = Pattern.compile(".*?AGAVI_SOURCE_DIRECTORY=\"(.*?)\"");
             String line;
             while ((line = reader.readLine()) != null) {
 

@@ -97,7 +97,7 @@ public final class AgaviPhpFrameworkProvider extends PhpFrameworkProvider {
     private final BadgeIcon badgeIcon;
 
     private AgaviPhpFrameworkProvider() {
-        super("Agavi", "The Agavi PHP framework");
+        super("Agavi PHP framework", "The Agavi PHP framework");
         badgeIcon = new BadgeIcon(
                 ImageUtilities.loadImage(ICON_PATH),
                 AgaviPhpFrameworkProvider.class.getResource("/" + ICON_PATH)); // NOI18N

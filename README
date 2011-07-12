@@ -1,0 +1,5 @@
+
+2011-07-12 
+----------
+Fixed the Agavi install location detection on OSX and other *nixes (Thanks to Benjamin Boerngen-Schmidt)
+Display "Agavi PHP Framework" instead of just "Agavi" when creating a new project and selecting the framework(s)
