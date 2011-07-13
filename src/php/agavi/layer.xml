@@ -1,25 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
 <filesystem>
-    <folder name="Templates">
-        <folder name="Agavi">
-            <file name="AgaviModule">
-                <attr name="displayName" bundlevalue="php.agavi.Bundle#Templates/Agavi/AgaviModule"/>
-                <attr name="instantiatingIterator" newvalue="php.agavi.ui.wizard.module.NewAgaviModuleWizardIterator"/>
-                <attr name="template" boolvalue="true"/>
-                <attr name="templateCategory" stringvalue="PHP" />
-                <attr name="templateWizardURL" urlvalue="nbresloc:/php/agavi/ui/wizard/module/newAgaviModule.html"/>
-            </file>
-        </folder>
-    </folder>
-    <folder name="Projects">
-        <folder name="org-netbeans-modules-php-project">
-            <folder name="Nodes">
-                <file name="php.agavi.ui.modules.ModulesNodeFactoryImpl.instance">
-                    <attr intvalue="1200" name="position"/>
-                </file>
-            </folder>
-        </folder>
-    </folder>
-    
+	<folder name="Templates">
+		<folder name="Agavi">
+			<file name="AgaviModule">
+				<attr name="displayName" bundlevalue="php.agavi.Bundle#Templates/Agavi/AgaviModule"/>
+				<attr name="instantiatingIterator" newvalue="php.agavi.ui.wizard.module.NewAgaviModuleWizardIterator"/>
+				<attr name="template" boolvalue="true"/>
+				<attr name="templateCategory" stringvalue="PHP"/>
+				<attr name="templateWizardURL" urlvalue="nbresloc:/php/agavi/ui/wizard/module/newAgaviModule.html"/>
+			</file>
+			<file name="AgaviRoutingTemplate.xml" url="ui/xmlpalette/AgaviRoutingTemplate.xml">
+				<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.items.resources.Bundle#Templates/Agavi/AgaviRoutingTemplate" />	
+			</file>
+		</folder>				
+	</folder>
+	<folder name="Projects">
+		<folder name="org-netbeans-modules-php-project">
+			<folder name="Nodes">
+				<file name="php.agavi.ui.modules.ModulesNodeFactoryImpl.instance">
+					<attr intvalue="1200" name="position"/>
+				</file>
+			</folder>
+		</folder>
+	</folder>
+	<folder name="Editors">
+		<folder name="text">
+			<folder name="xml">
+				<file name="PaletteFactory.instance">
+					<attr name="instanceOf" stringvalue="org.netbeans.spi.palette.PaletteController"/>
+					<attr name="instanceCreate" methodvalue="php.agavi.ui.xmlpalette.XMLPaletteFactory.createPalette"/>
+				</file>
+			</folder>
+		</folder>
+	</folder>
+	<folder name="Loaders">
+		<folder name="text">
+			<folder name="agavi-routing+xml">
+				<folder name="Actions">
+					<file name="org-openide-actions-CopyAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-CopyAction.instance"/>
+						<attr name="position" intvalue="400"/>
+					</file>
+					<file name="org-openide-actions-CutAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-CutAction.instance"/>
+						<attr name="position" intvalue="300"/>
+					</file>
+					<file name="org-openide-actions-DeleteAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-DeleteAction.instance"/>
+						<attr name="position" intvalue="600"/>
+					</file>
+					<file name="org-openide-actions-FileSystemAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-FileSystemAction.instance"/>
+						<attr name="position" intvalue="1100"/>
+					</file>
+					<file name="org-openide-actions-OpenAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-OpenAction.instance"/>
+						<attr name="position" intvalue="100"/>
+					</file>
+					<file name="org-openide-actions-PropertiesAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-PropertiesAction.instance"/>
+						<attr name="position" intvalue="1400"/>
+					</file>
+					<file name="org-openide-actions-RenameAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-RenameAction.instance"/>
+						<attr name="position" intvalue="700"/>
+					</file>
+					<file name="org-openide-actions-SaveAsTemplateAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-SaveAsTemplateAction.instance"/>
+						<attr name="position" intvalue="900"/>
+					</file>
+					<file name="org-openide-actions-ToolsAction.shadow">
+						<attr name="originalFile" stringvalue="Actions/System/org-openide-actions-ToolsAction.instance"/>
+						<attr name="position" intvalue="1300"/>
+					</file>
+					<file name="sep-1.instance">
+						<attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+						<attr name="position" intvalue="200"/>
+					</file>
+					<file name="sep-2.instance">
+						<attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+						<attr name="position" intvalue="500"/>
+					</file>
+					<file name="sep-3.instance">
+						<attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+						<attr name="position" intvalue="800"/>
+					</file>
+					<file name="sep-4.instance">
+						<attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+						<attr name="position" intvalue="1000"/>
+					</file>
+					<file name="sep-5.instance">
+						<attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+						<attr name="position" intvalue="1200"/>
+					</file>
+				</folder>
+				<folder name="Factories">
+					<file name="AgaviRoutingDataLoader.instance">
+						<attr name="dataObjectClass" stringvalue="php.agavi.ui.xmlpalette.filetypes.AgaviRoutingDataObject"/>
+						<attr name="instanceCreate" methodvalue="org.openide.loaders.DataLoaderPool.factory"/>
+						<attr name="mimeType" stringvalue="text/agavi-routing+xml"/>
+					</file>
+				</folder>
+			</folder>
+		</folder>
+	</folder>
+	<folder name="XMLPalette">
+		<folder name="Snippets">
+			<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.items.resources.Bundle#XMLPalette/Snippets"/>
+			<file name="GenericValidator.xml" url="ui/xmlpalette/items/resources/GenericValidator.xml">
+				<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.items.resources.Bundle#XMLPalette/Snippets/GenericValidator.xml"/>
+			</file>
+			<file name="Route.xml" url="ui/xmlpalette/items/resources/Route.xml">
+				<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.items.resources.Bundle#XMLPalette/Snippets/Route.xml"/>
+			</file>
+		</folder>
+		<folder name="Fragments">
+			<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.items.resources.Bundle#XMLPalette/Fragments"/>
+		</folder>
+	</folder>
+	<folder name="Services">
+		<folder name="MIMEResolver">
+			<file name="AgaviRoutingResolver.xml" url="ui/xmlpalette/AgaviRoutingResolver.xml">
+				<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.Bundle#Services/MIMEResolver/AgaviRoutingResolver.xml"/>
+			</file>
+			<file name="XMLResolver.xml" url="ui/xmlpalette/XMLResolver.xml">
+				<attr name="displayName" bundlevalue="php.agavi.ui.xmlpalette.Bundle#Services/MIMEResolver/XMLResolver.xml"/>
+			</file>
+		</folder>
+	</folder>    
 </filesystem>

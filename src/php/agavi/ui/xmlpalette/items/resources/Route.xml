@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+                Sun Public License Notice
+
+The contents of this file are subject to the Sun Public License
+Version 1.0 (the "License"). You may not use this file except in
+compliance with the License. A copy of the License is available at
+http://www.sun.com/
+
+The Original Code is NetBeans. The Initial Developer of the Original
+Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
+Microsystems, Inc. All Rights Reserved.
+-->
+<!DOCTYPE editor_palette_item PUBLIC "-//NetBeans//Editor Palette Item 1.0//EN" "http://www.netbeans.org/dtds/editor-palette-item-1_0.dtd">
+
+<editor_palette_item version="1.0">
+    <class name="php.agavi.ui.xmlpalette.items.Route" />
+
+    <icon16 urlvalue="php/agavi/ui/xmlpalette/items/resources/Item16.png" />
+    <icon32 urlvalue="php/agavi/ui/xmlpalette/items/resources/Item32.png" />
+    <description localizing-bundle="php/agavi/ui/xmlpalette/items/resources/Bundle"
+               display-name-key="NAME_html-ROUTE"
+               tooltip-key="HINT_html-ROUTE" />
+</editor_palette_item>
+
