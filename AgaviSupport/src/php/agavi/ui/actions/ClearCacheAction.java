@@ -40,49 +40,78 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
-package php.agavi.ui.modules;
 
-import org.netbeans.api.project.Project;
+package php.agavi.ui.actions;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.prefs.Preferences;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
-import org.netbeans.spi.project.ui.support.NodeFactory;
-import org.netbeans.spi.project.ui.support.NodeFactorySupport;
-import org.netbeans.spi.project.ui.support.NodeList;
-import org.openide.loaders.DataObjectNotFoundException;
+import org.netbeans.modules.php.spi.actions.BaseAction;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileStateInvalidException;
+import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import php.agavi.AgaviPhpFrameworkProvider;
 
 /**
- * A node factory that creates the modules-node
- * NOTE: This should use LookupProviderImpl and ModuleLookupItem
+ * Clear the application cache
  * 
- * @author Markus Lervik
+ * @author Markus Lervik <markus.lervik@necora.fi>
  */
-public class ModulesNodeFactoryImpl implements NodeFactory {
+public final class ClearCacheAction extends BaseAction {
+
+    private static final ClearCacheAction INSTANCE = new ClearCacheAction();
+    
+    private ClearCacheAction() {
+        
+    }
+    
+    public static ClearCacheAction getInstance() {
+        return INSTANCE;
+    }
 
     @Override
-    public NodeList<?> createNodes(Project project) {
+    protected String getFullName() {
+        return "Clear cache";
+    }
 
+    @Override
+    protected String getPureName() {
+        return "Clear cache";
+    }
 
-        if (AgaviPhpFrameworkProvider.locateInSrc(project.getProjectDirectory(), "modules", true) == null) {
-            return NodeFactorySupport.fixedNodeList();
-        }
-
-        PhpModule phpModule = PhpModule.lookupPhpModule(project);
+    @Override
+    protected void actionPerformed(PhpModule phpModule) {
+     
+        Preferences preferences = getPreferences(phpModule);
         
-        if (phpModule != null) {
-            if (!AgaviPhpFrameworkProvider.getInstance().isInPhpModule(phpModule)) {
-                return NodeFactorySupport.fixedNodeList();
+        String sourceDir = preferences.get("sourceDir", "");
+        File location;
+        
+        if (!sourceDir.isEmpty()) {
+            location = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir + "/app");
+        } else {
+            location = new File(phpModule.getSourceDirectory().getPath());
+        }
+        FileObject startDir = FileUtil.toFileObject(location);
+        
+        FileObject cache = AgaviPhpFrameworkProvider.locate(startDir, "cache", true);
+        
+        if (cache != null) {            
+            for(FileObject child : cache.getChildren()) {
+                try {
+                    child.delete();
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
             }
-        }
+        }        
         
-        try {
-            ModuleNode nd = new ModuleNode(project);
-            return NodeFactorySupport.fixedNodeList(nd);
-        } catch (DataObjectNotFoundException donfe) {
-            Exceptions.printStackTrace(donfe);
-        }
-
-        return NodeFactorySupport.fixedNodeList();
-
+    }
+    
+    private static Preferences getPreferences(PhpModule module) {
+        return module.getPreferences(AgaviPhpFrameworkProvider.class, true);
     }
 }

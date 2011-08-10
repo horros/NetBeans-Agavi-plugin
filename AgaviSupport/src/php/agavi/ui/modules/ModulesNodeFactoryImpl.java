@@ -40,78 +40,51 @@
  * Portions Copyrighted 2009 Sun Microsystems, Inc.
  */
 
+package php.agavi.ui.modules;
 
-package php.agavi.ui.actions;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.prefs.Preferences;
+import org.netbeans.api.project.Project;
 import org.netbeans.modules.php.api.phpmodule.PhpModule;
-import org.netbeans.modules.php.spi.actions.BaseAction;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileStateInvalidException;
-import org.openide.filesystems.FileUtil;
+import org.netbeans.spi.project.ui.support.NodeFactory;
+import org.netbeans.spi.project.ui.support.NodeFactorySupport;
+import org.netbeans.spi.project.ui.support.NodeList;
+import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import php.agavi.AgaviPhpFrameworkProvider;
 
 /**
- * Clear the application cache
+ * A node factory that creates the modules-node
+ * NOTE: This should use LookupProviderImpl and ModuleLookupItem
  * 
- * @author Markus Lervik <markus.lervik@necora.fi>
+ * @author Markus Lervik
  */
-public final class ClearCacheAction extends BaseAction {
-
-    private static final ClearCacheAction INSTANCE = new ClearCacheAction();
-    
-    private ClearCacheAction() {
-        
-    }
-    
-    public static ClearCacheAction getInstance() {
-        return INSTANCE;
-    }
+public class ModulesNodeFactoryImpl implements NodeFactory {
 
     @Override
-    protected String getFullName() {
-        return "Clear cache";
-    }
+    public NodeList<?> createNodes(Project project) {
 
-    @Override
-    protected String getPureName() {
-        return "Clear cache";
-    }
 
-    @Override
-    protected void actionPerformed(PhpModule phpModule) {
-     
-        Preferences preferences = getPreferences(phpModule);
+				if (project.getProjectDirectory().canRead()) {
+					if (AgaviPhpFrameworkProvider.locateInSrc(project.getProjectDirectory(), "modules", true) == null) {
+            return NodeFactorySupport.fixedNodeList();
+					}
+				}
+
+        PhpModule phpModule = PhpModule.lookupPhpModule(project);
         
-        String sourceDir = preferences.get("sourcesDir", "");
-        File location;
-        
-        if (!sourceDir.isEmpty()) {
-            location = new File(phpModule.getSourceDirectory().getPath() + "/" + sourceDir);
-        } else {
-            location = new File(phpModule.getSourceDirectory().getPath());
-        }
-        FileObject startDir = FileUtil.toFileObject(location);
-        
-        FileObject cache = AgaviPhpFrameworkProvider.locate(startDir, "cache", true);
-        
-        if (cache != null) {            
-            for(FileObject child : cache.getChildren()) {
-                try {
-                    child.delete();
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
+        if (phpModule != null) {
+            if (!AgaviPhpFrameworkProvider.getInstance().isInPhpModule(phpModule)) {
+                return NodeFactorySupport.fixedNodeList();
             }
-        }        
+        }
         
-    }
-    
-    private static Preferences getPreferences(PhpModule module) {
-        return module.getPreferences(AgaviPhpFrameworkProvider.class, true);
+        try {
+            ModuleNode nd = new ModuleNode(project);
+            return NodeFactorySupport.fixedNodeList(nd);
+        } catch (DataObjectNotFoundException donfe) {
+            Exceptions.printStackTrace(donfe);
+        }
+
+        return NodeFactorySupport.fixedNodeList();
+
     }
 }

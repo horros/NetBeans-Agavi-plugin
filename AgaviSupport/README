@@ -1,3 +1,10 @@
+1.0.1.1
+-------
+- Fixed a few NPE errors if the source directory was not set
+- Moved the plugin under an AgaviSupportSuite -plugin suite
+- New and shiny update center, remove any old plugin installations and add 
+  http://dev.necora.fi/markus/nb/catalog.xml to your plugin manager!
+
 2011-07-13 01
 -------------
 - Added an XML palette from which you can drag routes and validators into route
