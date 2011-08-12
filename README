@@ -1,3 +1,7 @@
+1.0.1.2
+-------
+- Fixed an issue where Go to View would show you an incorrect list of views if you had sub-actions
+
 1.0.1.1
 -------
 - Fixed a few NPE errors if the source directory was not set
