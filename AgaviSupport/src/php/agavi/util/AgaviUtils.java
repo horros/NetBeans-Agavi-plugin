@@ -204,7 +204,7 @@ public final class AgaviUtils {
 
 			PhpModule module = PhpModule.inferPhpModule();
 
-			Pattern p = Pattern.compile(actionMatcher.group(1) + "(.*)View(.*)");
+			Pattern p = Pattern.compile(actionMatcher.group(1) + "(.*)View(.*)\\.class\\.php");
 
 			EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
 
