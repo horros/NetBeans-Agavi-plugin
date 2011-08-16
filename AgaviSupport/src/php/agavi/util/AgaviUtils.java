@@ -67,7 +67,7 @@ public final class AgaviUtils {
 	public static final Pattern VIEW_FILE = Pattern.compile("^(\\w+)View.class.php");
 	public static final Pattern TEMPLATE_FILE = Pattern.compile("^(\\w+).php$");
 	public static final Pattern ACTION_FILE = Pattern.compile("^(\\w+)Action.class.php$");
-	public static final Pattern ACTION_NAME = Pattern.compile("^(\\w+)Action$");
+	public static final Pattern ACTION_NAME = Pattern.compile("^(\\w+)Action");
 	public static String ACTION_METHOD_PREFIX = "execute";
 
 	/**
@@ -78,43 +78,88 @@ public final class AgaviUtils {
 	 */
 	public static FileObject getAction(FileObject viewFile) {
 
+
 		Matcher viewMatcher = VIEW_FILE.matcher(viewFile.getNameExt());
-		Matcher templateMatcher = TEMPLATE_FILE.matcher(viewFile.getNameExt());
-
-		String prefix = null;
-		String action = null;
-
-		if (viewMatcher.matches()) {
-			prefix = viewMatcher.group(1);
-		} else if (templateMatcher.matches()) {
-			prefix = templateMatcher.group(1);
-		}
-
-		if (prefix != null && prefix.length() > 0) {
-			action = prefix + "Action.class.php";
-		} else {
-			return null;
-		}
-
-		FileObject parent = viewFile.getParent();
 
 		PhpModule module = PhpModule.inferPhpModule();
-		// We don't really have a way to know if this is a sub-action or a
-		// sub-sub-action or whatever, so we must attempt to traverse backwards
-		// up the directory hierarchy and try to find an action file within the 
-		// folder or its subfolders
-		do {
 
-			FileObject f = AgaviPhpFrameworkProvider.locate(parent, action, true);
-			if (f != null) {
-				return f;
+		if (viewMatcher.matches()) {
+			
+			Preferences preferences = module.getPreferences(AgaviPhpFrameworkProvider.class, true);
+			String sourceDir = preferences.get("sourceDir", "");
+			File src;
+			
+			// Prebuild the path to the modules-directory
+			String pathToModules;
+			
+			if (sourceDir.length() > 0) {
+				pathToModules = module.getSourceDirectory().getPath() + "/" + sourceDir + "/app/modules/";
 			} else {
-				parent = parent.getParent();
+				pathToModules = module.getSourceDirectory().getPath() + "/app/modules/";
 			}
 
-		} while (!module.getSourceDirectory().getName().equals(parent.getName()));
+			Pattern p = Pattern.compile(viewMatcher.group(1) + "(.*)Action(.*)\\.class\\.php");
+
+
+			StringBuilder sb = new StringBuilder();
+			EditorSupport editorSupport = Lookup.getDefault().lookup(EditorSupport.class);
+			
+			for (PhpClass phpClass : editorSupport.getClasses(viewFile)) {
+				
+				// Make sure that the class we're operating on is a view class
+				Matcher matcher = VIEW_NAME.matcher(phpClass.getName());
+				if (matcher.matches()) {
+					
+					// Split the view class into parts so we know the module and the path 
+					// to the view class and remove the "View" part from the class name
+					String[] split = phpClass.getName().replace("View", "").split("_");
+					
+					sb.append(split[0]).append("/actions/");
+					
+					// The class name is the last part of the array
+					String name = split[split.length - 1];
+					
+					if (name.length() > 0) {
+						
+						// Split the name of the class on uppercase characters
+						String[] classParts = name.split("(?<=[a-z])(?=[A-Z])");
+						
+						// Build the path to the action directory
+						for (int i = 1; i < split.length - 1; i++) {
+							sb.append(split[i]).append("/");
+						}
+
+						src = new File(pathToModules + "/" + sb.toString());
+
+						if (src != null && src.exists()) {
+
+							// Ok, test with the full class name we got, minus the "View"-part (should not
+							// work, but you never know
+							FileObject f = AgaviPhpFrameworkProvider.locate(FileUtil.toFileObject(src), name + "Action.class.php", false);
+							if (f != null) {
+								return f;
+							} else {
+								// Right, we didn't find a file name based on the full view class name,
+								// so start picking off parts from the end and see if we get a match
+								// that way
+								for (int j = classParts.length - 1; j > 0; j--) {
+									name = name.replace(classParts[j], "");
+									f = AgaviPhpFrameworkProvider.locate(FileUtil.toFileObject(src), name + "Action.class.php", false);
+									if (f != null) {
+										return f;
+									} else {
+										continue;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 
 		return null;
+
 
 	}
 
@@ -230,7 +275,7 @@ public final class AgaviUtils {
 			Preferences preferences = module.getPreferences(AgaviPhpFrameworkProvider.class, true);
 			String sourceDir = preferences.get("sourceDir", "");
 			File src;
-			
+
 			if (sourceDir.length() > 0) {
 				src = new File(module.getSourceDirectory().getPath() + "/" + sourceDir + "/app/modules/" + path);
 			} else {
